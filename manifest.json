@@ -1,0 +1,7 @@
+{
+  "name": "Wallpaper Changer",
+  "version": "1.0.0",
+  "description": "Changes your Discord background to a random image you configured every x seconds",
+  "author": "Bowser65",
+  "license": "AGPL-3.0"
+}
