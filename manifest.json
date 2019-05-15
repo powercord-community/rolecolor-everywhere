@@ -1,7 +1,7 @@
 {
-  "name": "Wallpaper Changer",
+  "name": "Role Color Everywhere",
   "version": "1.0.0",
-  "description": "Changes your Discord background to a random image you configured every x seconds",
+  "description": "Adds some colors to Discord's element depending on roles",
   "author": "Bowser65",
   "license": "AGPL-3.0"
 }
