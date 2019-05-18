@@ -1,5 +1,5 @@
+const { React, Flux, getModule, getModuleByDisplayName } = require('powercord/webpack');
 const { waitFor, getOwnerInstance } = require('powercord/util');
-const { React, getModule } = require('powercord/webpack');
 const { inject, uninject } = require('powercord/injector');
 const { Plugin } = require('powercord/entities');
 
@@ -9,16 +9,109 @@ module.exports = class RoleColorEverywhere extends Plugin {
   async startPlugin () {
     this.registerSettings('rceverywhere', 'Role Color Everywhere', Settings);
 
-    this.currentUser = (await getModule([ 'getCurrentUser' ])).getCurrentUser().id;
+    this.currentUser = await getModule([ 'getCurrentUser' ]);
     this.members = await getModule([ 'getMember' ]);
+    this.channels = await getModule([ 'getChannel' ]);
     this.guilds = await getModule([ 'getGuild' ]);
+    this.currentGuild = await getModule([ 'getGuildId' ]);
+    this.injectAccount();
+    this.injectVoice();
+    this.injectMentions();
     this.injectTyping();
     this.injectMemberList();
   }
 
   pluginWillUnload () {
+    uninject('rce-account');
+    uninject('rce-voice');
+    uninject('rce-mentions');
     uninject('rce-typing');
     uninject('rce-members');
+  }
+
+  async injectAccount () {
+    const _this = this;
+    const NameTag = await getModuleByDisplayName('NameTag');
+    await inject('rce-account', NameTag.prototype, 'render', function (_, res) {
+      if (!_this.settings.get('account', true)) {
+        return res;
+      }
+
+      if (this.props.className.includes('accountDetails')) {
+        const { className, children: username } = res.props.children[0].props;
+        const usernameComponent = ({ guildId }) => {
+          if (!guildId) {
+            return React.createElement('span', { className }, username);
+          }
+
+          const currentId = _this.currentUser.getCurrentUser().id;
+          const member = _this.members.getMember(guildId, currentId);
+          if (member.colorString) {
+            return React.createElement('span', {
+              className,
+              style: { color: member.colorString }
+            }, username);
+          }
+          return React.createElement('span', { className }, username);
+        };
+        res.props.children[0] = React.createElement(
+          Flux.connectStores([ _this.currentGuild ], () => ({ guildId: _this.currentGuild.getGuildId() }))(usernameComponent)
+        );
+      }
+      return res;
+    });
+  }
+
+  async injectVoice () {
+    const _this = this;
+    const VoiceUser = await getModuleByDisplayName('VoiceUser');
+    await inject('rce-voice', VoiceUser.prototype, 'render', function (_, res) {
+      if (!_this.settings.get('voice', true)) {
+        return res;
+      }
+
+      const guildId = _this.currentGuild.getGuildId();
+      const userId = this.props.user.id;
+      const member = _this.members.getMember(guildId, userId);
+      if (member && member.colorString) {
+        res.props.children.props.children[2].props.style = { color: member.colorString };
+      }
+      return res;
+    });
+  }
+
+  async injectMentions () {
+    const module = await getModule([ 'parse', 'parseTopic' ]);
+    await inject('rce-mentions', module, 'parse', ([ original, _, { channelId } ], res) => {
+      if (!this.settings.get('mentions', true)) {
+        return res;
+      }
+
+      const parsed = [ ...res ];
+      res.forEach((part, i) => {
+        if (typeof part === 'string') {
+          original = original.slice(part.length);
+        } else {
+          const originalSplit = original.split(' ');
+          const mention = originalSplit.shift();
+          original = originalSplit.join(' ');
+          if (part.type.displayName === 'Popout' && part.props.children.type.displayName === 'Mention') {
+            const match = mention.match(/(\d+)/);
+            if (match) {
+              const userId = match[1];
+              const guildId = this.channels.getChannel(channelId).guild_id;
+              const member = this.members.getMember(guildId, userId);
+              if (member && member.colorString) {
+                const newPart = { ...part };
+                newPart.props.children.props.style = { color: member.colorString };
+                parsed[i] = newPart;
+              }
+            }
+          }
+        }
+      });
+      return parsed;
+    });
   }
 
   async injectTyping () {
@@ -30,7 +123,8 @@ module.exports = class RoleColorEverywhere extends Plugin {
         return res;
       }
 
-      Object.keys(this.props.typingUsers).filter(id => id !== _this.currentUser).forEach((id, i) => {
+      const currentId = _this.currentUser.getCurrentUser().id;
+      Object.keys(this.props.typingUsers).filter(id => id !== currentId).forEach((id, i) => {
         const member = _this.members.getMember(this.props.channel.guild_id, id);
         if (member.colorString) {
           res.props.children[1].props.children[i * 2].props.style = { color: member.colorString };

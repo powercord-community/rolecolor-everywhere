@@ -6,6 +6,27 @@ module.exports = class Settings extends React.Component {
     return (
       <div>
         <SwitchItem
+          note='Should your username in account box indicator be colored'
+          value={this.props.getSetting('account', true)}
+          onChange={() => this.props.toggleSetting('account')}
+        >
+          Account
+        </SwitchItem>
+        <SwitchItem
+          note='Should usernames in voice channels be colored'
+          value={this.props.getSetting('voice', true)}
+          onChange={() => this.props.toggleSetting('voice')}
+        >
+          Voice users
+        </SwitchItem>
+        <SwitchItem
+          note='Should mentions in chat be colored'
+          value={this.props.getSetting('mentions', true)}
+          onChange={() => this.props.toggleSetting('mentions')}
+        >
+          Mentions
+        </SwitchItem>
+        <SwitchItem
           note='Should typing indicator be colored'
           value={this.props.getSetting('typing', true)}
           onChange={() => this.props.toggleSetting('typing')}
