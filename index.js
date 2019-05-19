@@ -2,11 +2,13 @@ const { React, Flux, getModule, getModuleByDisplayName } = require('powercord/we
 const { waitFor, getOwnerInstance } = require('powercord/util');
 const { inject, uninject } = require('powercord/injector');
 const { Plugin } = require('powercord/entities');
+const { resolve } = require('path');
 
 const Settings = require('./Settings');
 
 module.exports = class RoleColorEverywhere extends Plugin {
   async startPlugin () {
+    this.loadCSS(resolve(__dirname, 'style.css'));
     this.registerSettings('rceverywhere', 'Role Color Everywhere', Settings);
 
     this.currentUser = await getModule([ 'getCurrentUser' ]);
@@ -102,8 +104,14 @@ module.exports = class RoleColorEverywhere extends Plugin {
               const guildId = this.channels.getChannel(channelId).guild_id;
               const member = this.members.getMember(guildId, userId);
               if (member && member.colorString) {
+                const colorInt = parseInt(member.colorString.slice(1), 16);
                 const newPart = { ...part };
-                newPart.props.children.props.style = { color: member.colorString };
+                newPart.props.children.props.style = {
+                  '--color': member.colorString,
+                  '--hoveredColor': this._numberToTextColor(colorInt),
+                  '--backgroundColor': this._numberToRgba(colorInt, 0.1)
+                };
+                newPart.props.children.props.className += ' rolecolor-mention';
                 parsed[i] = newPart;
               }
             }
@@ -160,18 +168,40 @@ module.exports = class RoleColorEverywhere extends Plugin {
           return section;
         }
 
-        const r = (role.color & 0xFF0000) >>> 16;
-        const g = (role.color & 0xFF00) >>> 8;
-        const b = role.color & 0xFF;
         return React.createElement('div', {
           className: members.membersGroup,
           style: {
-            color: `rgb(${r}, ${g}, ${b})`
+            color: _this._numberToRgba(role.color)
           }
         }, `${section.props.title}—${section.props.count}`);
       };
       return res;
     });
     instance.forceUpdate();
+  }
+
+  _numberToRgba (color, alpha = 1) {
+    const { r, g, b } = this._numberToRgb(color);
+    if (alpha === 1) {
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  _numberToTextColor (color) {
+    const { r, g, b } = this._numberToRgb(color);
+    const bgDelta = (r * 0.299) + (g * 0.587) + (b * 0.114);
+    return ((255 - bgDelta) < 105) ? '#000000' : '#ffffff';
+  }
+
+  _numberToRgb (color) {
+    const r = (color & 0xFF0000) >>> 16;
+    const g = (color & 0xFF00) >>> 8;
+    const b = color & 0xFF;
+    return {
+      r,
+      g,
+      b
+    };
   }
 };

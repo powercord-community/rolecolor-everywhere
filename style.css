@@ -1,0 +1,9 @@
+html body .theme-dark .rolecolor-mention {
+  color: var(--color);
+  background-color: var(--backgroundColor);
+}
+
+html body .theme-dark .rolecolor-mention:hover {
+  color: var(--hoveredColor);
+  background-color: var(--color);
+}
