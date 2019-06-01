@@ -1,9 +1,11 @@
 html body .theme-dark .rolecolor-mention {
-  color: var(--color);
-  background-color: var(--backgroundColor);
+  color: var(--color) !important;
+  background-color: var(--backgroundColor) !important;
+  padding: 0 2px !important;
 }
 
 html body .theme-dark .rolecolor-mention:hover {
-  color: var(--hoveredColor);
-  background-color: var(--color);
+  color: var(--hoveredColor) !important;
+  background-color: var(--color) !important;
+  text-decoration: none !important;
 }
