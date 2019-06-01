@@ -94,10 +94,10 @@ module.exports = class RoleColorEverywhere extends Plugin {
         if (typeof part === 'string') {
           original = original.slice(part.length);
         } else {
-          const originalSplit = original.split(' ');
+          const originalSplit = original.split('>');
           const mention = originalSplit.shift();
-          original = originalSplit.join(' ');
-          if (part.type.displayName === 'Popout' && part.props.children.type.displayName === 'Mention') {
+          original = originalSplit.join('>');
+          if (part.type.displayName === 'Popout' && part.props.children.type && part.props.children.type.displayName === 'Mention') {
             const match = mention.match(/(\d+)/);
             if (match) {
               const userId = match[1];
