@@ -97,7 +97,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
           const originalSplit = original.split('>');
           const mention = originalSplit.shift();
           original = originalSplit.join('>');
-          if (part.type.displayName === 'Popout' && part.props.children.type && part.props.children.type.displayName === 'Mention') {
+          if (part.type.displayName === 'DeprecatedPopout' && part.props.children.type && part.props.children.type.displayName === 'Mention') {
             const match = mention.match(/(\d+)/);
             if (match) {
               const userId = match[1];
