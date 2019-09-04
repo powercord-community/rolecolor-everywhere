@@ -1,4 +1,4 @@
-const { React, Flux, getModule, getModuleByDisplayName } = require('powercord/webpack');
+const { React, Flux, getModule, getAllModules, getModuleByDisplayName } = require('powercord/webpack');
 const { waitFor, getOwnerInstance } = require('powercord/util');
 const { inject, uninject } = require('powercord/injector');
 const { Plugin } = require('powercord/entities');
@@ -146,6 +146,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
   async injectMemberList () {
     const _this = this;
     const members = await getModule([ 'members', 'membersWrap' ]);
+    const container = (await getAllModules(m => Object.keys(m).join('') === 'container'))[1].container;
     const instance = getOwnerInstance(await waitFor(`.${members.membersWrap.replace(/ /g, '.')}`));
     inject('rce-members', instance.__proto__, 'render', function (args, res) {
       if (!_this.settings.get('members', true)) {
@@ -169,7 +170,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
         }
 
         return React.createElement('div', {
-          className: members.membersGroup,
+          className: [ container, members.membersGroup ].join(' '),
           style: {
             color: _this._numberToRgba(role.color)
           }
