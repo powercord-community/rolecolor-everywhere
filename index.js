@@ -32,6 +32,8 @@ module.exports = class RoleColorEverywhere extends Plugin {
   }
 
   async injectAccount () {
+    // @todo: fix this
+    return null;
     const _this = this;
     const NameTag = await getModuleByDisplayName('NameTag');
     await inject('rce-account', NameTag.prototype, 'render', function (_, res) {
@@ -146,7 +148,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
   async injectMemberList () {
     const _this = this;
     const members = await getModule([ 'members', 'membersWrap' ]);
-    const container = (await getAllModules(m => Object.keys(m).join('') === 'container'))[1].container;
+    const container = (await getAllModules(m => Object.keys(m).join('') === 'container'))[0].container;
     const instance = getOwnerInstance(await waitFor(`.${members.membersWrap.replace(/ /g, '.')}`));
     inject('rce-members', instance.__proto__, 'render', function (args, res) {
       if (!_this.settings.get('members', true)) {
