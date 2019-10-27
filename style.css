@@ -1,11 +1,15 @@
-html body .rolecolor-mention {
+.rolecolor-mention {
   color: var(--color) !important;
   background-color: var(--backgroundColor) !important;
   padding: 0 2px !important;
 }
 
-html body .rolecolor-mention:hover {
+.rolecolor-mention:hover {
   color: var(--hoveredColor) !important;
   background-color: var(--color) !important;
   text-decoration: none !important;
+}
+
+.rolecolor-activity div {
+  color: var(--color) !important;
 }

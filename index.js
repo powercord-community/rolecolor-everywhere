@@ -21,6 +21,8 @@ module.exports = class RoleColorEverywhere extends Plugin {
     this.injectMentions();
     this.injectTyping();
     this.injectMemberList();
+    this.injectMessages();
+    this.injectStatus();
   }
 
   pluginWillUnload () {
@@ -29,39 +31,44 @@ module.exports = class RoleColorEverywhere extends Plugin {
     uninject('rce-mentions');
     uninject('rce-typing');
     uninject('rce-members');
+    uninject('rce-messages');
+    uninject('rce-status');
   }
 
   async injectAccount () {
-    // @todo: fix this
-    return null;
     const _this = this;
-    const NameTag = await getModuleByDisplayName('NameTag');
-    await inject('rce-account', NameTag.prototype, 'render', function (_, res) {
+    const { container } = await getModule([ 'container', 'usernameContainer' ]);
+    const Account = getOwnerInstance(await waitFor(`.${container.split(' ').join('.')}:not(#powercord-spotify-modal)`));
+    console.log(Account);
+    await inject('rce-account', Account.__proto__, 'renderNameTag', (_, res) => {
       if (!_this.settings.get('account', true)) {
         return res;
       }
 
-      if (this.props.className.includes('accountDetails')) {
-        const { className, children: username } = res.props.children[0].props;
-        const usernameComponent = ({ guildId }) => {
+      const originalChildren = res.props.children;
+      res.props.children = (props) => {
+        const res = originalChildren(props);
+        console.log(res.props.children[0].props.children.props.children);
+        const usernameComponent = ({ guildId, children }) => {
           if (!guildId) {
-            return React.createElement('span', { className }, username);
+            return children;
           }
 
           const currentId = _this.currentUser.getCurrentUser().id;
           const member = _this.members.getMember(guildId, currentId);
           if (member.colorString) {
             return React.createElement('span', {
-              className,
               style: { color: member.colorString }
-            }, username);
+            }, children);
           }
-          return React.createElement('span', { className }, username);
+          return children;
         };
-        res.props.children[0] = React.createElement(
-          Flux.connectStores([ _this.currentGuild ], () => ({ guildId: _this.currentGuild.getGuildId() }))(usernameComponent)
-        );
-      }
+
+        const ConnectedComponent = Flux.connectStores([ _this.currentGuild ], () => ({ guildId: _this.currentGuild.getGuildId() }))(usernameComponent);
+        const originalUsername = res.props.children[0].props.children.props.children;
+        res.props.children[0].props.children.props.children = React.createElement(ConnectedComponent, null, originalUsername);
+        return res;
+      };
       return res;
     });
   }
@@ -86,7 +93,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
 
   async injectMentions () {
     const module = await getModule([ 'parse', 'parseTopic' ]);
-    await inject('rce-mentions', module, 'parse', ([ original, _, { channelId } ], res) => {
+    await inject('rce-mentions', module, 'parse', ([ original, , { channelId } ], res) => {
       if (!this.settings.get('mentions', true)) {
         return res;
       }
@@ -148,7 +155,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
   async injectMemberList () {
     const _this = this;
     const members = await getModule([ 'members', 'membersWrap' ]);
-    const container = (await getAllModules(m => Object.keys(m).join('') === 'container'))[0].container;
+    const { container } = (await getAllModules(m => Object.keys(m).join('') === 'container'))[0];
     const instance = getOwnerInstance(await waitFor(`.${members.membersWrap.replace(/ /g, '.')}`));
     inject('rce-members', instance.__proto__, 'render', function (args, res) {
       if (!_this.settings.get('members', true)) {
@@ -181,6 +188,46 @@ module.exports = class RoleColorEverywhere extends Plugin {
       return res;
     });
     instance.forceUpdate();
+  }
+
+  async injectMessages () {
+    const _this = this;
+    const MessageContent = await getModuleByDisplayName('MessageContent');
+    await inject('rce-messages', MessageContent.prototype, 'render', function (args) {
+      if (!_this.settings.get('messages', true) || this.props.__rce_henlo) {
+        return args;
+      }
+
+      this.props.__rce_henlo = true;
+      if (this.props.message.colorString) {
+        this.props.content = [ React.createElement('span', {
+          className: 'rolecolor-message',
+          style: {
+            color: this.props.message.colorString
+          }
+        }, this.props.content) ];
+      }
+      return args;
+    }, true);
+  }
+
+  async injectStatus () {
+    const _this = this;
+    const MemberListItem = await getModuleByDisplayName('MemberListItem');
+    await inject('rce-status', MemberListItem.prototype, 'renderActivity', function (args, res) {
+      if (!_this.settings.get('status', true)) {
+        return res;
+      }
+
+      const member = _this.members.getMember(this.props.guildId, this.props.user.id);
+      if (member.colorString) {
+        return React.createElement('span', {
+          className: 'rolecolor-activity',
+          style: { '--color': member.colorString }
+        }, res);
+      }
+      return res;
+    });
   }
 
   _numberToRgba (color, alpha = 1) {

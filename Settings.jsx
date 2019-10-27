@@ -40,6 +40,20 @@ module.exports = class Settings extends React.Component {
         >
           Members list
         </SwitchItem>
+        <SwitchItem
+          note='Should user statuses in member list be colored'
+          value={this.props.getSetting('status', true)}
+          onChange={() => this.props.toggleSetting('status')}
+        >
+          Status
+        </SwitchItem>
+        <SwitchItem
+          note='Should messages be colored'
+          value={this.props.getSetting('messages', true)}
+          onChange={() => this.props.toggleSetting('messages')}
+        >
+          Messages
+        </SwitchItem>
       </div>
     );
   }
