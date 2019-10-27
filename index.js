@@ -39,7 +39,6 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const _this = this;
     const { container } = await getModule([ 'container', 'usernameContainer' ]);
     const Account = getOwnerInstance(await waitFor(`.${container.split(' ').join('.')}:not(#powercord-spotify-modal)`));
-    console.log(Account);
     await inject('rce-account', Account.__proto__, 'renderNameTag', (_, res) => {
       if (!_this.settings.get('account', true)) {
         return res;
@@ -48,7 +47,6 @@ module.exports = class RoleColorEverywhere extends Plugin {
       const originalChildren = res.props.children;
       res.props.children = (props) => {
         const res = originalChildren(props);
-        console.log(res.props.children[0].props.children.props.children);
         const usernameComponent = ({ guildId, children }) => {
           if (!guildId) {
             return children;
