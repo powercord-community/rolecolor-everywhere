@@ -156,7 +156,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const { container } = (await getAllModules(m => Object.keys(m).join('') === 'container'))[0];
     const instance = getOwnerInstance(await waitFor(`.${members.membersWrap.replace(/ /g, '.')}`));
     inject('rce-members', instance.__proto__, 'render', function (args, res) {
-      if (!_this.settings.get('members', true)) {
+      if (!_this.settings.get('members', true) || !res.props.children.props) {
         return res;
       }
 
@@ -213,7 +213,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const _this = this;
     const MemberListItem = await getModuleByDisplayName('MemberListItem');
     await inject('rce-status', MemberListItem.prototype, 'renderActivity', function (args, res) {
-      if (!_this.settings.get('status', true)) {
+      if (!_this.settings.get('status', true) || !this.props.guildId) {
         return res;
       }
 
