@@ -218,7 +218,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
       }
 
       const member = _this.members.getMember(this.props.guildId, this.props.user.id);
-      if (member.colorString) {
+      if (member && member.colorString) {
         return React.createElement('span', {
           className: 'rolecolor-activity',
           style: { '--color': member.colorString }
