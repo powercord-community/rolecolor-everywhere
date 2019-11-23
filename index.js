@@ -54,7 +54,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
 
           const currentId = _this.currentUser.getCurrentUser().id;
           const member = _this.members.getMember(guildId, currentId);
-          if (member.colorString) {
+          if (member && member.colorString) {
             return React.createElement('span', {
               style: { color: member.colorString }
             }, children);
