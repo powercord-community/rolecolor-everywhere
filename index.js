@@ -1,4 +1,4 @@
-const { React, Flux, getModule, getAllModules, getModuleByDisplayName } = require('powercord/webpack');
+const { React, Flux, getModule, getModuleByDisplayName } = require('powercord/webpack');
 const { waitFor, getOwnerInstance } = require('powercord/util');
 const { inject, uninject } = require('powercord/injector');
 const { Plugin } = require('powercord/entities');
@@ -153,8 +153,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
   async injectMemberList () {
     const _this = this;
     const members = await getModule([ 'members', 'membersWrap' ]);
-    const { container } = (await getAllModules(m => Object.keys(m).join('') === 'container'))[0];
-    const instance = getOwnerInstance(await waitFor(`.${members.membersWrap.replace(/ /g, '.')}`));
+    const instance = getOwnerInstance(await waitFor(`.${members.membersWrap}`));
     inject('rce-members', instance.__proto__, 'render', function (args, res) {
       if (!_this.settings.get('members', true) || !res.props.children.props) {
         return res;
@@ -176,12 +175,13 @@ module.exports = class RoleColorEverywhere extends Plugin {
           return section;
         }
 
-        return React.createElement('div', {
-          className: [ container, members.membersGroup ].join(' '),
-          style: {
-            color: _this._numberToRgba(role.color)
-          }
-        }, `${section.props.title}—${section.props.count}`);
+        const originalType = section.type;
+        section.type = (props) => {
+          const res = originalType(props);
+          res.props.children = React.createElement('span', { style: { color: _this._numberToRgba(role.color) } }, res.props.children);
+          return res;
+        };
+        return section;
       };
       return res;
     });
