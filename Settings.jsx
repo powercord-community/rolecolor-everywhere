@@ -1,4 +1,4 @@
-const { React } = require('powercord/webpack');
+const { React, i18n: { Messages } } = require('powercord/webpack');
 const { SwitchItem } = require('powercord/components/settings');
 
 module.exports = class Settings extends React.Component {
@@ -10,7 +10,7 @@ module.exports = class Settings extends React.Component {
           value={this.props.getSetting('account', true)}
           onChange={() => this.props.toggleSetting('account')}
         >
-          Account
+          {Messages.ACCOUNT}
         </SwitchItem>
         <SwitchItem
           note='Should usernames in voice channels be colored'
@@ -24,7 +24,7 @@ module.exports = class Settings extends React.Component {
           value={this.props.getSetting('mentions', true)}
           onChange={() => this.props.toggleSetting('mentions')}
         >
-          Mentions
+          {Messages.FORM_LABEL_MENTIONS}
         </SwitchItem>
         <SwitchItem
           note='Should typing indicator be colored'
@@ -45,14 +45,14 @@ module.exports = class Settings extends React.Component {
           value={this.props.getSetting('status', true)}
           onChange={() => this.props.toggleSetting('status')}
         >
-          Status
+          {Messages.FRIENDS_COLUMN_STATUS}
         </SwitchItem>
         <SwitchItem
           note='Should messages be colored'
           value={this.props.getSetting('messages', true)}
           onChange={() => this.props.toggleSetting('messages')}
         >
-          Messages
+          {Messages.MESSAGES}
         </SwitchItem>
       </div>
     );
