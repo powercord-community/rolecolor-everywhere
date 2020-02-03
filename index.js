@@ -183,7 +183,9 @@ module.exports = class RoleColorEverywhere extends Plugin {
                   '--hoveredColor': this._numberToTextColor(colorInt),
                   '--backgroundColor': this._numberToRgba(colorInt, 0.1)
                 };
-                item.props.children.props.className += ' rolecolor-mention';
+                if (!item.props.children.props.className.includes('rolecolor-mention')) {
+                  item.props.children.props.className += ' rolecolor-mention';
+                }
               }
               i++;
             } else if (item.props && item.props.children && Array.isArray(item.props.children)) {
