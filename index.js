@@ -18,10 +18,10 @@ module.exports = class RoleColorEverywhere extends Plugin {
     this.currentGuild = await getModule([ 'getGuildId' ]);
     this.injectAccount();
     this.injectVoice();
-    this.injectMentions();
     this.injectTyping();
     this.injectMemberList();
     this.injectMessages();
+    this.injectSystemMessages();
     this.injectStatus();
   }
 
@@ -32,6 +32,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     uninject('rce-typing');
     uninject('rce-members');
     uninject('rce-messages');
+    uninject('rce-systemMessages');
     uninject('rce-status');
   }
 
@@ -86,46 +87,6 @@ module.exports = class RoleColorEverywhere extends Plugin {
         res.props.children.props.children[2].props.style = { color: member.colorString };
       }
       return res;
-    });
-  }
-
-  async injectMentions () {
-    const module = await getModule([ 'parse', 'parseTopic' ]);
-    await inject('rce-mentions', module, 'parse', ([ original, , { channelId } ], res) => {
-      if (!this.settings.get('mentions', true)) {
-        return res;
-      }
-
-      const parsed = [ ...res ];
-      res.forEach((part, i) => {
-        if (typeof part === 'string') {
-          original = original.slice(part.length);
-        } else {
-          const originalSplit = original.split('>');
-          const mention = originalSplit.shift();
-          original = originalSplit.join('>');
-          if (part.type.displayName === 'DeprecatedPopout' && part.props.children.type && part.props.children.type.displayName === 'Mention') {
-            const match = mention.match(/(\d+)/);
-            if (match) {
-              const userId = match[1];
-              const guildId = this.channels.getChannel(channelId).guild_id;
-              const member = this.members.getMember(guildId, userId);
-              if (member && member.colorString) {
-                const colorInt = parseInt(member.colorString.slice(1), 16);
-                const newPart = { ...part };
-                newPart.props.children.props.style = {
-                  '--color': member.colorString,
-                  '--hoveredColor': this._numberToTextColor(colorInt),
-                  '--backgroundColor': this._numberToRgba(colorInt, 0.1)
-                };
-                newPart.props.children.props.className += ' rolecolor-mention';
-                parsed[i] = newPart;
-              }
-            }
-          }
-        }
-      });
-      return parsed;
     });
   }
 
@@ -190,23 +151,115 @@ module.exports = class RoleColorEverywhere extends Plugin {
 
   async injectMessages () {
     const _this = this;
-    const MessageContent = await getModuleByDisplayName('MessageContent');
-    await inject('rce-messages', MessageContent.prototype, 'render', function (args) {
-      if (!_this.settings.get('messages', true) || this.props.__rce_henlo) {
-        return args;
+    const Message = await getModule(m => m.default && m.default.displayName === 'Message');
+    await inject('rce-messages', Message, 'default', (args, res) => {
+      if (!res.props.children[2] || !res.props.children[2].type.type || res.props.children[2].type.type.__rce_uwu) {
+        return res;
       }
 
-      this.props.__rce_henlo = true;
-      if (this.props.message.colorString) {
-        this.props.content = [ React.createElement('span', {
-          className: 'rolecolor-message',
-          style: {
-            color: this.props.message.colorString
+      res.props.children[2].type.type.__rce_uwu = 'owo';
+      const renderer = res.props.children[2].type.type;
+      res.props.children[2].type.type = (props) => {
+        const content = renderer(props);
+        // Color
+        if (_this.settings.get('messages', true)) {
+          content.props.style = {
+            color: res.props.children[2].props.message.colorString
+          };
+        }
+
+        // Mentions
+        if (_this.settings.get('mentions', true) && !res.props.children[0]) {
+          let i = 0;
+          const ids = (props.message.content.match(/<@!?(\d+)>/g) || []).map(s => s.replace(/<@!?(\d+)>/g, '$1'));
+          const parser = items => items.map(item => {
+            if (item.type && item.type.displayName === 'DeprecatedPopout' && item.props.children.type && item.props.children.type.displayName === 'Mention') {
+              const guildId = this.channels.getChannel(props.message.channel_id).guild_id;
+              const member = this.members.getMember(guildId, ids[i]);
+              if (member && member.colorString) {
+                const colorInt = parseInt(member.colorString.slice(1), 16);
+                item.props.children.props.style = {
+                  '--color': member.colorString,
+                  '--hoveredColor': this._numberToTextColor(colorInt),
+                  '--backgroundColor': this._numberToRgba(colorInt, 0.1)
+                };
+                item.props.children.props.className += ' rolecolor-mention';
+              }
+              i++;
+            } else if (item.props && item.props.children && Array.isArray(item.props.children)) {
+              item.props.children = parser(item.props.children);
+            }
+            return item;
+          });
+
+          if (Array.isArray(content.props.children[0])) {
+            content.props.children[0] = parser(content.props.children[0]);
           }
-        }, this.props.content) ];
+        }
+        return content;
+      };
+      return res;
+    });
+    Message.default.displayName = 'Message';
+  }
+
+  async injectSystemMessages () {
+    const _this = this;
+    const Message = await getModule(m => m.default && m.default.displayName === 'Message');
+    await inject('rce-systemMessages', Message, 'default', (args, res) => {
+      if (!_this.settings.get('systemMessages', true) || !res.props.children[0] || res.props.children[0].props.message.type < 6) {
+        return res;
       }
-      return args;
-    }, true);
+
+      const author = this.members.getMember(res.props.children[0].props.channel.guild_id, res.props.children[0].props.message.author.id);
+      if (!author || !author.colorString) {
+        return res;
+      }
+
+      const renderer = res.props.children[0].type.type;
+      res.props.children[0].type = (props) => {
+        const res = renderer(props);
+        const renderer2 = res.props.children.type;
+        res.props.children.type = (props) => {
+          const res = renderer2(props);
+          if (res.type.prototype.render) {
+            const OgType = res.type;
+            res.type = class Component extends OgType {
+              render () {
+                const res = super.render();
+                res.props.children[0].props.children = res.props.children[0].props.children.map(c => {
+                  if (c && typeof c.type === 'function') {
+                    c.props.style = {
+                      color: author.colorString
+                    };
+                  }
+                  return c;
+                });
+                return res;
+              }
+            };
+          } else {
+            const renderer3 = res.type;
+            res.type = (props) => {
+              const res = renderer3(props);
+              res.props.children = res.props.children.map(c => {
+                if (c && typeof c === 'object') {
+                  c.props.style = {
+                    color: author.colorString
+                  };
+                }
+                return c;
+              });
+              return res;
+            };
+          }
+          return res;
+        };
+        return res;
+      };
+      return res;
+    });
+    Message.default.displayName = 'Message';
   }
 
   async injectStatus () {
