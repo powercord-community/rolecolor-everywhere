@@ -22,6 +22,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     this.injectMemberList();
     this.injectMessages();
     this.injectSystemMessages();
+    this.injectSlateMention();
     this.injectStatus();
   }
 
@@ -33,6 +34,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     uninject('rce-members');
     uninject('rce-messages');
     uninject('rce-systemMessages');
+    uninject('rce-slateMentions');
     uninject('rce-status');
   }
 
@@ -102,7 +104,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
       const currentId = _this.currentUser.getCurrentUser().id;
       Object.keys(this.props.typingUsers).filter(id => id !== currentId).forEach((id, i) => {
         const member = _this.members.getMember(this.props.channel.guild_id, id);
-        if (member.colorString) {
+        if (member.colorString && res.props.children[1].props.children[i * 2].props) {
           res.props.children[1].props.children[i * 2].props.style = { color: member.colorString };
         }
       });
@@ -262,6 +264,33 @@ module.exports = class RoleColorEverywhere extends Plugin {
       return res;
     });
     Message.default.displayName = 'Message';
+  }
+
+  async injectSlateMention () {
+    const module = await getModule([ 'UserMention', 'RoleMention' ]);
+    await inject('rce-slateMentions', module, 'UserMention', ([ { id, channel: { guild_id } } ], res) => {
+      if (!this.settings.get('mentions', true)) {
+        return res;
+      }
+      const ogChildren = res.props.children;
+      res.props.children = (props) => {
+        const res = ogChildren(props);
+        const member = this.members.getMember(guild_id, id);
+        if (member && member.colorString) {
+          const colorInt = parseInt(member.colorString.slice(1), 16);
+          res.props.style = {
+            '--color': member.colorString,
+            '--hoveredColor': this._numberToTextColor(colorInt),
+            '--backgroundColor': this._numberToRgba(colorInt, 0.1)
+          };
+          res.props.className += ' rolecolor-mention';
+          return res;
+        }
+        return res;
+      };
+      return res;
+    });
+    module.UserMention.displayName = 'UserMention';
   }
 
   async injectStatus () {
