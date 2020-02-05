@@ -153,23 +153,23 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const _this = this;
     const Message = await getModule(m => m.default && m.default.displayName === 'Message');
     await inject('rce-messages', Message, 'default', (args, res) => {
-      if (!res.props.children[2] || !res.props.children[2].type.type || res.props.children[2].type.type.__rce_uwu) {
+      if (!res.props.children[0].props.children[2] || !res.props.children[0].props.children[2].type.type || res.props.children[0].props.children[2].type.__rce_uwu) {
         return res;
       }
 
-      res.props.children[2].type.type.__rce_uwu = 'owo';
-      const renderer = res.props.children[2].type.type;
-      res.props.children[2].type.type = (props) => {
+      res.props.children[0].props.children[2].type.__rce_uwu = 'owo';
+      const renderer = res.props.children[0].props.children[2].type.type;
+      res.props.children[0].props.children[2].type.type = (props) => {
         const content = renderer(props);
         // Color
         if (_this.settings.get('messages', true)) {
           content.props.style = {
-            color: res.props.children[2].props.message.colorString
+            color: res.props.children[0].props.children[2].props.message.colorString
           };
         }
 
         // Mentions
-        if (_this.settings.get('mentions', true) && !res.props.children[0]) {
+        if (_this.settings.get('mentions', true) && !res.props.children[0].props.children[0]) {
           let i = 0;
           const ids = (props.message.content.match(/<@!?(\d+)>/g) || []).map(s => s.replace(/<@!?(\d+)>/g, '$1'));
           const parser = items => items.map(item => {
@@ -209,7 +209,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const _this = this;
     const Message = await getModule(m => m.default && m.default.displayName === 'Message');
     await inject('rce-systemMessages', Message, 'default', (args, res) => {
-      if (!_this.settings.get('systemMessages', true) || !res.props.children[0] || res.props.children[0].props.message.type < 6) {
+      if (!_this.settings.get('systemMessages', true) || !res.props.children[0] || !res.props.children[0].props.message || res.props.children[0].props.message.type < 6) {
         return res;
       }
 
