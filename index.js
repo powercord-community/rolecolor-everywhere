@@ -166,7 +166,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
         // Color
         if (_this.settings.get('messages', true)) {
           content.props.style = {
-            color: res.props.children[0].props.children[2].props.message.colorString
+            color: props.message.colorString
           };
         }
 
@@ -211,16 +211,24 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const _this = this;
     const Message = await getModule(m => m.default && m.default.displayName === 'Message');
     await inject('rce-systemMessages', Message, 'default', (args, res) => {
-      if (!_this.settings.get('systemMessages', true) || !res.props.children[0] || !res.props.children[0].props.message || res.props.children[0].props.message.type < 6) {
+      return res; // @TODO
+      /* eslint-disable */
+      if (!_this.settings.get('systemMessages', true) || !res.props.children[0] || !res.props.children[0].props.children[0] ||
+        !res.props.children[0].props.children[0].props.message || res.props.children[0].props.children[0].props.message.type < 6) {
         return res;
       }
 
-      const author = this.members.getMember(res.props.children[0].props.channel.guild_id, res.props.children[0].props.message.author.id);
+      const { props } = res.props.children[0].props.children[0];
+      const author = this.members.getMember(props.channel.guild_id, props.message.author.id);
       if (!author || !author.colorString) {
         return res;
       }
 
-      const renderer = res.props.children[0].type.type;
+      if (!res.props.children[0].props.children[0].type.type) {
+        return res;
+      }
+      console.log(res.props.children[0].props.children[0].type.type);
+      const renderer = res.props.children[0].props.children[0].type.type;
       res.props.children[0].type = (props) => {
         const res = renderer(props);
         const renderer2 = res.props.children.type;
@@ -228,6 +236,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
           const res = renderer2(props);
           if (res.type.prototype.render) {
             const OgType = res.type;
+            console.log(OgType);
             res.type = class Component extends OgType {
               render () {
                 const res = super.render();
