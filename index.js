@@ -152,7 +152,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
   }
 
   async injectMessages () {
-    const _this = this;
+    const _this = this; // I think I could go with this, but it works that way, and i cba to change it
     const Message = await getModule(m => m.default && m.default.displayName === 'Message');
     await inject('rce-messages', Message, 'default', (args, res) => {
       if (!res.props.children[0].props.children[2] || !res.props.children[0].props.children[2].type.type || res.props.children[0].props.children[2].type.__rce_uwu) {
@@ -202,6 +202,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
         }
         return content;
       };
+      res.props.children[0].props.children[2].type.type.displayName = renderer.displayName;
       return res;
     });
     Message.default.displayName = 'Message';
