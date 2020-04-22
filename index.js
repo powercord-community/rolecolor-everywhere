@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2020 Bowser65
+ * Licensed under the Open Software License version 3.0
+ */
+
 const { React, Flux, getModule, getModuleByDisplayName } = require('powercord/webpack');
 const { waitFor, getOwnerInstance } = require('powercord/util');
 const { inject, uninject } = require('powercord/injector');

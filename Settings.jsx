@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2020 Bowser65
+ * Licensed under the Open Software License version 3.0
+ */
+
 const { React, i18n: { Messages } } = require('powercord/webpack');
 const { SwitchItem } = require('powercord/components/settings');
 

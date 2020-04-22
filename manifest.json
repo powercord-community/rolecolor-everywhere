@@ -3,5 +3,5 @@
   "version": "1.0.0",
   "description": "Adds some colors to Discord's element depending on roles",
   "author": "Bowser65",
-  "license": "AGPL-3.0"
+  "license": "OSL-3.0"
 }
