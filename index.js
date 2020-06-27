@@ -143,7 +143,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
           return section;
         }
 
-        const originalType = section.type;
+        const originalType = section.type.type;
         section.type = (props) => {
           const res = originalType(props);
           res.props.children = React.createElement('span', { style: { color: _this._numberToRgba(role.color) } }, res.props.children);
