@@ -7,20 +7,19 @@ const { React, Flux, getModule, getModuleByDisplayName } = require('powercord/we
 const { waitFor, getOwnerInstance } = require('powercord/util');
 const { inject, uninject } = require('powercord/injector');
 const { Plugin } = require('powercord/entities');
-const { resolve } = require('path');
 
 const Settings = require('./Settings');
 
 module.exports = class RoleColorEverywhere extends Plugin {
   async startPlugin () {
-    this.loadCSS(resolve(__dirname, 'style.css'));
+    this.loadStylesheet('style.css');
     this.registerSettings('rceverywhere', 'Role Color Everywhere', Settings);
 
     this.currentUser = await getModule([ 'getCurrentUser' ]);
     this.members = await getModule([ 'getMember' ]);
     this.channels = await getModule([ 'getChannel' ]);
     this.guilds = await getModule([ 'getGuild' ]);
-    this.currentGuild = await getModule([ 'getGuildId' ]);
+    this.currentGuild = await getModule([ 'getLastSelectedGuildId' ]);
     this.injectAccount();
     this.injectVoice();
     this.injectTyping();
@@ -34,7 +33,6 @@ module.exports = class RoleColorEverywhere extends Plugin {
   pluginWillUnload () {
     uninject('rce-account');
     uninject('rce-voice');
-    uninject('rce-mentions');
     uninject('rce-typing');
     uninject('rce-members');
     uninject('rce-messages');
@@ -47,7 +45,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const _this = this;
     const { container } = await getModule([ 'container', 'usernameContainer' ]);
     const Account = getOwnerInstance(await waitFor(`.${container.split(' ').join('.')}:not(#powercord-spotify-modal)`));
-    await inject('rce-account', Account.__proto__, 'renderNameTag', (_, res) => {
+    inject('rce-account', Account.__proto__, 'renderNameTag', (_, res) => {
       if (!_this.settings.get('account', true)) {
         return res;
       }
@@ -122,14 +120,14 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const _this = this;
     const members = await getModule([ 'members', 'membersWrap' ]);
     const instance = getOwnerInstance(await waitFor(`.${members.membersWrap}`));
-    inject('rce-members', instance.__proto__, 'render', function (args, res) {
-      if (!_this.settings.get('members', true) || !res.props.children.props) {
+    inject('rce-members', instance.__proto__, 'render', function (_, res) {
+      if (!_this.settings.get('members', true) || !res.props.children[1].props) {
         return res;
       }
 
       const guild = _this.guilds.getGuild(this.props.channel.guild_id);
-      const func = res.props.children.props.renderSection;
-      res.props.children.props.renderSection = (a) => {
+      const func = res.props.children[1].props.renderSection;
+      res.props.children[1].props.renderSection = (a) => {
         let section = func(a);
         if (section.props.tutorialId) {
           section = section.props.children;
@@ -159,7 +157,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
   async injectMessages () {
     const _this = this; // I think I could go with this, but it works that way, and i cba to change it
     const Message = await getModule(m => m.default && m.default.displayName === 'Message');
-    await inject('rce-messages', Message, 'default', (args, res) => {
+    await inject('rce-messages', Message, 'default', (_, res) => {
       if (!res.props.children[0].props.children[2] || !res.props.children[0].props.children[2].type.type || res.props.children[0].props.children[2].type.__rce_uwu) {
         return res;
       }
@@ -201,8 +199,8 @@ module.exports = class RoleColorEverywhere extends Plugin {
             return item;
           });
 
-          if (Array.isArray(content.props.children[0])) {
-            content.props.children[0] = parser(content.props.children[0]);
+          if (Array.isArray(content.props.children[1])) {
+            content.props.children[1] = parser(content.props.children[1]);
           }
         }
         return content;
