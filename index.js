@@ -12,8 +12,13 @@ const Settings = require('./Settings');
 
 module.exports = class RoleColorEverywhere extends Plugin {
   async startPlugin () {
+    powercord.api.settings.registerSettings('rceverywhere', {
+      category: this.entityID,
+      label: 'Role Color Everywhere',
+      render: Settings
+    });
+
     this.loadStylesheet('style.css');
-    this.registerSettings('rceverywhere', 'Role Color Everywhere', Settings);
 
     this.currentUser = await getModule([ 'getCurrentUser' ]);
     this.members = await getModule([ 'getMember' ]);
@@ -39,6 +44,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     uninject('rce-systemMessages');
     uninject('rce-slateMentions');
     uninject('rce-status');
+    powercord.api.settings.unregisterSettings('rceverywhere');
   }
 
   async injectAccount () {
