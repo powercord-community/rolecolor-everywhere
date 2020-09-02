@@ -127,13 +127,13 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const members = await getModule([ 'members', 'membersWrap' ]);
     const instance = getOwnerInstance(await waitFor(`.${members.membersWrap}`));
     inject('rce-members', instance.__proto__, 'render', function (_, res) {
-      if (!_this.settings.get('members', true) || !res.props.children[1].props) {
+      if (!_this.settings.get('members', true) || !res.props.children?.props) {
         return res;
       }
 
       const guild = _this.guilds.getGuild(this.props.channel.guild_id);
-      const func = res.props.children[1].props.renderSection;
-      res.props.children[1].props.renderSection = (a) => {
+      const func = res.props.children.props.renderSection;
+      res.props.children.props.renderSection = (a) => {
         let section = func(a);
         if (section.props.tutorialId) {
           section = section.props.children;
