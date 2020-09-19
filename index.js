@@ -45,12 +45,17 @@ module.exports = class RoleColorEverywhere extends Plugin {
     uninject('rce-slateMentions');
     uninject('rce-status');
     powercord.api.settings.unregisterSettings('rceverywhere');
+
+    const classes = getModule([ 'container', 'usernameContainer' ], false);
+    if (classes) {
+      getOwnerInstance(document.querySelector(`.${classes.container}:not(#powercord-spotify-modal)`)).forceUpdate();
+    }
   }
 
   async injectAccount () {
     const _this = this;
     const { container } = await getModule([ 'container', 'usernameContainer' ]);
-    const Account = getOwnerInstance(await waitFor(`.${container.split(' ').join('.')}:not(#powercord-spotify-modal)`));
+    const Account = getOwnerInstance(await waitFor(`.${container}:not(#powercord-spotify-modal)`));
     inject('rce-account', Account.__proto__, 'renderNameTag', (_, res) => {
       if (!_this.settings.get('account', true)) {
         return res;
@@ -95,7 +100,8 @@ module.exports = class RoleColorEverywhere extends Plugin {
       const userId = this.props.user.id;
       const member = _this.members.getMember(guildId, userId);
       if (member && member.colorString) {
-        res.props.children.props.children[2].props.style = { color: member.colorString };
+        res.props.children.props.children[2].props.className += ' rolecolor-colored';
+        res.props.children.props.children[2].props.style = { '--color': member.colorString };
       }
       return res;
     });
@@ -104,6 +110,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
   async injectTyping () {
     const _this = this;
     const typing = await getModule([ 'typing', 'activityInviteEducation' ]);
+    const blockedStore = await getModule([ 'isBlocked', 'isFriend' ]);
     const instance = getOwnerInstance(await waitFor(`.${typing.typing.replace(/ /g, '.')}`));
     inject('rce-typing', instance.__proto__, 'render', function (args, res) {
       if (!res || !this.props.channel.guild_id || !_this.settings.get('typing', true)) {
@@ -111,10 +118,11 @@ module.exports = class RoleColorEverywhere extends Plugin {
       }
 
       const currentId = _this.currentUser.getCurrentUser().id;
-      Object.keys(this.props.typingUsers).filter(id => id !== currentId).forEach((id, i) => {
+      Object.keys(this.props.typingUsers).filter(id => id !== currentId && !blockedStore.isBlocked(id)).forEach((id, i) => {
         const member = _this.members.getMember(this.props.channel.guild_id, id);
         if (member.colorString && res.props.children[1].props.children[i * 2].props) {
-          res.props.children[1].props.children[i * 2].props.style = { color: member.colorString };
+          res.props.children[1].props.children[i * 2].props.className = 'rolecolor-colored';
+          res.props.children[1].props.children[i * 2].props.style = { '--color': member.colorString };
         }
       });
       return res;
@@ -150,7 +158,10 @@ module.exports = class RoleColorEverywhere extends Plugin {
         const originalType = section.type.type;
         section.type = (props) => {
           const res = originalType(props);
-          res.props.children = React.createElement('span', { style: { color: _this._numberToRgba(role.color) } }, res.props.children);
+          res.props.children = React.createElement('span', {
+            className: 'rolecolor-colored',
+            style: { '--color': _this._numberToRgba(role.color) }
+          }, res.props.children);
           return res;
         };
         return section;
@@ -323,7 +334,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
       const member = _this.members.getMember(this.props.guildId, this.props.user.id);
       if (member && member.colorString) {
         return React.createElement('span', {
-          className: 'rolecolor-activity',
+          className: 'rolecolor-colored',
           style: { '--color': member.colorString }
         }, res);
       }
