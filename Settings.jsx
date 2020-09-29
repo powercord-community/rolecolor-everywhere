@@ -60,10 +60,9 @@ module.exports = class Settings extends React.PureComponent {
           {Messages.MESSAGES}
         </SwitchItem>
         <SwitchItem
-          note='Should system messages be colored. Currently broken.'
+          note='Should system messages be colored.'
           value={this.props.getSetting('systemMessages', true)}
           onChange={() => this.props.toggleSetting('systemMessages', true)}
-          disabled
         >
           System messages
         </SwitchItem>

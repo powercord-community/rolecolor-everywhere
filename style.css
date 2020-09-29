@@ -4,12 +4,20 @@
  */
 
 .rolecolor-mention {
+  padding: 0 !important;
+}
+
+.rolecolor-mention span {
   color: var(--color) !important;
   background-color: var(--backgroundColor) !important;
   padding: 0 2px !important;
 }
 
 .rolecolor-mention:hover {
+  text-decoration: none !important;
+}
+
+.rolecolor-mention:hover span {
   color: var(--hoveredColor) !important;
   background-color: var(--color) !important;
   text-decoration: none !important;

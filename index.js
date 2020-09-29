@@ -41,7 +41,8 @@ module.exports = class RoleColorEverywhere extends Plugin {
     uninject('rce-typing');
     uninject('rce-members');
     uninject('rce-messages');
-    uninject('rce-systemMessages');
+    uninject('rce-systemMessages-join');
+    uninject('rce-systemMessages-boost');
     uninject('rce-slateMentions');
     uninject('rce-status');
     powercord.api.settings.unregisterSettings('rceverywhere');
@@ -172,128 +173,71 @@ module.exports = class RoleColorEverywhere extends Plugin {
   }
 
   async injectMessages () {
-    const _this = this; // I think I could go with this, but it works that way, and i cba to change it
-    const Message = await getModule(m => m.default && m.default.displayName === 'Message');
-    await inject('rce-messages', Message, 'default', (_, res) => {
-      if (!res.props.children[0].props.children[2] || !res.props.children[0].props.children[2].type.type || res.props.children[0].props.children[2].type.__rce_uwu) {
-        return res;
+    const MessageContent = await getModule(m => m.type?.displayName === 'MessageContent');
+    inject('rce-messages', MessageContent, 'type', ([ props ], res) => {
+      if (this.settings.get('messages', true)) {
+        res.props.style = {
+          color: props.message.colorString
+        };
       }
 
-      res.props.children[0].props.children[2].type.__rce_uwu = 'owo';
-      const renderer = res.props.children[0].props.children[2].type.type;
-      res.props.children[0].props.children[2].type.type = (props) => {
-        const content = renderer(props);
-        // Color
-        if (_this.settings.get('messages', true)) {
-          content.props.style = {
-            color: props.message.colorString
-          };
-        }
+      if (this.settings.get('mentions', true) && Array.isArray(res.props.children[0])) {
+        const guildId = this.channels.getChannel(props.message.channel_id).guild_id;
+        const colors = (props.message.content.match(/<@!?(\d+)>/g) || [])
+          .map(m => this.members.getMember(guildId, m.replace(/[<@!>]/g, ''))?.colorString);
 
-        // Mentions
-        if (_this.settings.get('mentions', true) && !res.props.children[0].props.children[0]) {
-          let i = 0;
-          const ids = (props.message.content.match(/<@!?(\d+)>/g) || []).map(s => s.replace(/<@!?(\d+)>/g, '$1'));
-          const parser = items => items.map(item => {
-            if (item.type && item.type.displayName === 'DeprecatedPopout' && item.props.children.type && item.props.children.type.displayName === 'Mention') {
-              const guildId = this.channels.getChannel(props.message.channel_id).guild_id;
-              const member = this.members.getMember(guildId, ids[i]);
-              if (member && member.colorString) {
-                const colorInt = parseInt(member.colorString.slice(1), 16);
-                item.props.children.props.style = {
-                  '--color': member.colorString,
+        res.props.children[0]
+          .filter(c => c.props?.children?.type?.displayName === 'Mention' || c.type?.displayName === 'Mention')
+          .map(c => c.props.className ? c : c.props.children)
+          .forEach((m, i) => {
+            if (colors[i]) {
+              const colorInt = parseInt(colors[i].slice(1), 16);
+              const { children } = m.props;
+              m.props.className += ' rolecolor-mention';
+              m.props.children = React.createElement('span', {
+                style: {
+                  '--color': colors[i],
                   '--hoveredColor': this._numberToTextColor(colorInt),
                   '--backgroundColor': this._numberToRgba(colorInt, 0.1)
-                };
-                if (!item.props.children.props.className.includes('rolecolor-mention')) {
-                  item.props.children.props.className += ' rolecolor-mention';
                 }
-              }
-              i++;
-            } else if (item.props && item.props.children && Array.isArray(item.props.children)) {
-              item.props.children = parser(item.props.children);
+              }, children);
             }
-            return item;
           });
-
-          if (Array.isArray(content.props.children[1])) {
-            content.props.children[1] = parser(content.props.children[1]);
-          }
-        }
-        return content;
-      };
-      res.props.children[0].props.children[2].type.type.displayName = renderer.displayName;
+      }
       return res;
     });
-    Message.default.displayName = 'Message';
   }
 
   async injectSystemMessages () {
     const _this = this;
-    const Message = await getModule(m => m.default && m.default.displayName === 'Message');
-    await inject('rce-systemMessages', Message, 'default', (args, res) => {
-      return res; // @TODO
-      /* eslint-disable */
-      if (!_this.settings.get('systemMessages', true) || !res.props.children[0] || !res.props.children[0].props.children[0] ||
-        !res.props.children[0].props.children[0].props.message || res.props.children[0].props.children[0].props.message.type < 6) {
-        return res;
+    const UserJoin = await getModule(m => m.default?.displayName === 'UserJoin');
+    const UserPremiumGuildSubscription = await getModuleByDisplayName('UserPremiumGuildSubscription');
+
+    function sysMsgInjecton ([ maybeProps ], res) {
+      if (_this.settings.get('systemMessages', true)) {
+        const props = maybeProps || this.props;
+
+        if (props.message.colorString) {
+          const parts = res.props.children[1]?.type?.displayName === 'ChatLayer'
+            ? res.props.children[0].props.children
+            : res.props.children;
+
+          parts.forEach(part => {
+            if (typeof part !== 'string') {
+              part.props.className = 'rolecolor-colored';
+              part.props.style = { '--color': props.message.colorString };
+            }
+          });
+        }
       }
 
-      const { props } = res.props.children[0].props.children[0];
-      const author = this.members.getMember(props.channel.guild_id, props.message.author.id);
-      if (!author || !author.colorString) {
-        return res;
-      }
-
-      if (!res.props.children[0].props.children[0].type.type) {
-        return res;
-      }
-      console.log(res.props.children[0].props.children[0].type.type);
-      const renderer = res.props.children[0].props.children[0].type.type;
-      res.props.children[0].type = (props) => {
-        const res = renderer(props);
-        const renderer2 = res.props.children.type;
-        res.props.children.type = (props) => {
-          const res = renderer2(props);
-          if (res.type.prototype.render) {
-            const OgType = res.type;
-            console.log(OgType);
-            res.type = class Component extends OgType {
-              render () {
-                const res = super.render();
-                res.props.children[0].props.children = res.props.children[0].props.children.map(c => {
-                  if (c && typeof c.type === 'function') {
-                    c.props.style = {
-                      color: author.colorString
-                    };
-                  }
-                  return c;
-                });
-                return res;
-              }
-            };
-          } else {
-            const renderer3 = res.type;
-            res.type = (props) => {
-              const res = renderer3(props);
-              res.props.children = res.props.children.map(c => {
-                if (c && typeof c === 'object') {
-                  c.props.style = {
-                    color: author.colorString
-                  };
-                }
-                return c;
-              });
-              return res;
-            };
-          }
-          return res;
-        };
-        return res;
-      };
       return res;
-    });
-    Message.default.displayName = 'Message';
+    }
+
+    inject('rce-systemMessages-join', UserJoin, 'default', sysMsgInjecton);
+    inject('rce-systemMessages-boost', UserPremiumGuildSubscription.prototype, 'render', sysMsgInjecton);
+
+    UserJoin.default.displayName = 'UserJoin';
   }
 
   async injectSlateMention () {
