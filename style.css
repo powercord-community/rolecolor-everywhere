@@ -4,23 +4,23 @@
  */
 
 .rolecolor-mention {
-  padding: 0 !important;
+  padding: 0;
+  background: transparent;
 }
 
 .rolecolor-mention span {
-  color: var(--color) !important;
-  background-color: var(--backgroundColor) !important;
-  padding: 0 2px !important;
+  color: var(--color);
+  background-color: var(--backgroundColor);
+  padding: 0 2px;
 }
 
 .rolecolor-mention:hover {
-  text-decoration: none !important;
+  text-decoration: none;
 }
 
 .rolecolor-mention:hover span {
-  color: var(--hoveredColor) !important;
-  background-color: var(--color) !important;
-  text-decoration: none !important;
+  color: var(--hoveredColor);
+  background-color: var(--color);
 }
 
 .rolecolor-colored {
@@ -28,5 +28,5 @@
 }
 
 .rolecolor-colored > * {
-  color: inherit !important;
+  color: inherit;
 }
