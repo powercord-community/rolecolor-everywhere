@@ -4,7 +4,7 @@
  */
 
 const { React, Flux, getModule, getModuleByDisplayName } = require('powercord/webpack');
-const { waitFor, getOwnerInstance } = require('powercord/util');
+const { waitFor, getOwnerInstance, findInReactTree } = require('powercord/util');
 const { inject, uninject } = require('powercord/injector');
 const { Plugin } = require('powercord/entities');
 
@@ -33,6 +33,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     this.injectSystemMessages();
     this.injectSlateMention();
     this.injectStatus();
+    this.injectUserPopout();
   }
 
   pluginWillUnload () {
@@ -45,6 +46,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     uninject('rce-systemMessages-boost');
     uninject('rce-slateMentions');
     uninject('rce-status');
+    uninject('rce-user-popout');
     powercord.api.settings.unregisterSettings('rceverywhere');
 
     const classes = getModule([ 'container', 'usernameContainer' ], false);
@@ -186,26 +188,38 @@ module.exports = class RoleColorEverywhere extends Plugin {
         const colors = (props.message.content.match(/<@!?(\d+)>/g) || [])
           .map(m => this.members.getMember(guildId, m.replace(/[<@!>]/g, ''))?.colorString);
 
-        res.props.children[0]
-          .filter(c => c.props?.children?.type?.displayName === 'Mention' || c.type?.displayName === 'Mention')
-          .map(c => c.props.className ? c : c.props.children)
-          .forEach((m, i) => {
-            if (colors[i]) {
-              const colorInt = parseInt(colors[i].slice(1), 16);
-              const { children } = m.props;
-              m.props.className += ' rolecolor-mention';
-              m.props.children = React.createElement('span', {
-                style: {
-                  '--color': colors[i],
-                  '--hoveredColor': this._numberToTextColor(colorInt),
-                  '--backgroundColor': this._numberToRgba(colorInt, 0.1)
-                }
-              }, children);
-            }
-          });
+        this._transformMessage(colors, res.props.children[0]);
       }
       return res;
     });
+  }
+
+  _transformMessage (colors, items) {
+    for (const item of items) {
+      if (typeof item === 'string') {
+        continue;
+      }
+
+      if (Array.isArray(item.props.children)) {
+        this._transformMessage(colors, item.props.children);
+      }
+
+      if (item.props?.children?.type?.displayName === 'Mention' || item.type?.displayName === 'Mention') {
+        const color = colors.shift();
+        if (color) {
+          const mention = item.props.className ? item : item.props.children;
+          const colorInt = parseInt(color.slice(1), 16);
+          mention.props.className += ' rolecolor-mention';
+          mention.props.children = React.createElement('span', {
+            style: {
+              '--color': color,
+              '--hoveredColor': this._numberToTextColor(colorInt),
+              '--backgroundColor': this._numberToRgba(colorInt, 0.1)
+            }
+          }, mention.props.children);
+        }
+      }
+    }
   }
 
   async injectSystemMessages () {
@@ -252,12 +266,14 @@ module.exports = class RoleColorEverywhere extends Plugin {
         const member = this.members.getMember(guild_id, id);
         if (member && member.colorString) {
           const colorInt = parseInt(member.colorString.slice(1), 16);
-          res.props.style = {
-            '--color': member.colorString,
-            '--hoveredColor': this._numberToTextColor(colorInt),
-            '--backgroundColor': this._numberToRgba(colorInt, 0.1)
-          };
           res.props.className += ' rolecolor-mention';
+          res.props.children = React.createElement('span', {
+            style: {
+              '--color': member.colorString,
+              '--hoveredColor': this._numberToTextColor(colorInt),
+              '--backgroundColor': this._numberToRgba(colorInt, 0.1)
+            }
+          }, res.props.children);
           return res;
         }
         return res;
@@ -284,6 +300,79 @@ module.exports = class RoleColorEverywhere extends Plugin {
       }
       return res;
     });
+  }
+
+  async injectUserPopout () {
+    const _this = this;
+    const UserPopout = await this._extractUserPopout();
+
+    inject('rce-user-popout', UserPopout.prototype, 'renderHeader', function (_, res) {
+      if (!_this.settings.get('userPoputs', true) || !this.props.guildMember.colorString) {
+        return res;
+      }
+
+      const color = this.props.guildMember.colorString;
+      const usernameAndNick = findInReactTree(res, p => Array.isArray(p) && p[1]?.type?.displayName === 'Flex');
+      if (usernameAndNick[0]) {
+        // Inject in the nickname only
+        usernameAndNick[0].props.children.props.className += ' rolecolor-colored-userpopout';
+        usernameAndNick[0].props.children.props.style = { '--color': color };
+      } else {
+        // Inject in the DiscordTag
+        const tag = findInReactTree(res, p => p.type?.displayName === 'DiscordTag');
+        const ogTagType = tag.type;
+        tag.type = function (props) {
+          const name = ogTagType.call(this, props);
+          const ogNameType = name.type;
+          name.type = function (props) {
+            const res = ogNameType.call(this, props);
+            const target = res.props.className.includes('headerTagWithNickname')
+              ? res.props.children[0]
+              : res;
+
+            target.props.className += ' rolecolor-colored-userpopout';
+            if (!target.props.style) { // Seems like it can be defined in some cases? idk
+              target.props.style = {};
+            }
+            target.props.style['--color'] = color;
+            return res;
+          };
+          return name;
+        };
+      }
+      return res;
+    });
+  }
+
+  async _extractUserPopout () {
+    const functionalUserPopout = await getModuleByDisplayName('UserPopout');
+
+    // React Honks moment
+    const owo = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher.current;
+    const ogUseMemo = owo.useMemo;
+    const ogUseState = owo.useState;
+    const ogUseEffect = owo.useEffect;
+    const ogUseLayoutEffect = owo.useLayoutEffect;
+    const ogUseRef = owo.useRef;
+
+    owo.useMemo = () => null;
+    owo.useState = () => [ null, () => void 0 ];
+    owo.useEffect = () => null;
+    owo.useLayoutEffect = () => null;
+    owo.useRef = () => ({});
+
+    // Render moment
+    const res = functionalUserPopout({ user: { isNonUserBot: () => void 0 } });
+
+    // React Hooks moment
+    owo.useMemo = ogUseMemo;
+    owo.useState = ogUseState;
+    owo.useEffect = ogUseEffect;
+    owo.useLayoutEffect = ogUseLayoutEffect;
+    owo.useRef = ogUseRef;
+
+    // Poggers moment
+    return res.type;
   }
 
   _numberToRgba (color, alpha = 1) {

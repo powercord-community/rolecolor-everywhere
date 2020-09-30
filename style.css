@@ -15,7 +15,7 @@
 }
 
 .rolecolor-mention:hover {
-  text-decoration: none;
+  text-decoration: none !important;
 }
 
 .rolecolor-mention:hover span {
@@ -23,10 +23,16 @@
   background-color: var(--color);
 }
 
+.headerNormal-T_seeN .rolecolor-colored-userpopout,
 .rolecolor-colored {
   color: var(--color) !important;
 }
 
+.headerNormal-T_seeN .rolecolor-colored-userpopout > *,
 .rolecolor-colored > * {
   color: inherit;
+}
+
+.headerNormal-T_seeN .rolecolor-colored-userpopout span + span {
+  opacity: 0.6;
 }

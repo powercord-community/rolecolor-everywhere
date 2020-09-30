@@ -66,6 +66,13 @@ module.exports = class Settings extends React.PureComponent {
         >
           System messages
         </SwitchItem>
+        <SwitchItem
+          note='Should names in user popouts be colored.'
+          value={this.props.getSetting('userPopouts', true)}
+          onChange={() => this.props.toggleSetting('userPopouts', true)}
+        >
+          User popouts
+        </SwitchItem>
       </div>
     );
   }
