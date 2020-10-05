@@ -184,11 +184,14 @@ module.exports = class RoleColorEverywhere extends Plugin {
       }
 
       if (this.settings.get('mentions', true) && Array.isArray(res.props.children[0])) {
-        const guildId = this.channels.getChannel(props.message.channel_id).guild_id;
-        const colors = (props.message.content.match(/<@!?(\d+)>/g) || [])
-          .map(m => this.members.getMember(guildId, m.replace(/[<@!>]/g, ''))?.colorString);
+        const channel = this.channels.getChannel(props.message.channel_id);
+        if (channel) {
+          const guildId = this.channels.getChannel(props.message.channel_id).guild_id;
+          const colors = (props.message.content.match(/<@!?(\d+)>/g) || [])
+            .map(m => this.members.getMember(guildId, m.replace(/[<@!>]/g, ''))?.colorString);
 
-        this._transformMessage(colors, res.props.children[0]);
+          this._transformMessage(colors, res.props.children[0]);
+        }
       }
       return res;
     });
@@ -286,7 +289,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
   async injectStatus () {
     const _this = this;
     const MemberListItem = await getModuleByDisplayName('MemberListItem');
-    await inject('rce-status', MemberListItem.prototype, 'renderActivity', function (args, res) {
+    await inject('rce-status', MemberListItem.prototype, 'renderActivity', function (_, res) {
       if (!_this.settings.get('status', true) || !this.props.guildId) {
         return res;
       }
