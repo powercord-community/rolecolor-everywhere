@@ -195,7 +195,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
       }
       return res;
     });
-    MessageContent.type.displayName = 'MessageContent'
+    MessageContent.type.displayName = 'MessageContent';
   }
 
   _transformMessage (colors, items) {
