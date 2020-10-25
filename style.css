@@ -28,11 +28,11 @@
   color: var(--color) !important;
 }
 
-.headerNormal-T_seeN .rolecolor-colored-userpopout > *,
+.headerNormal-T_seeN .rolecolor-colored-userpopout > span:not(.botTag-2WPJ74 ),
 .rolecolor-colored > * {
   color: inherit;
 }
 
-.headerNormal-T_seeN .rolecolor-colored-userpopout span + span {
+.headerNormal-T_seeN .rolecolor-colored-userpopout span:not([class]) {
   opacity: 0.6;
 }
