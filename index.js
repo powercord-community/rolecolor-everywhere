@@ -134,44 +134,24 @@ module.exports = class RoleColorEverywhere extends Plugin {
   }
 
   async injectMemberList () {
-    const _this = this;
     const members = await getModule([ 'members', 'membersWrap' ]);
-    const instance = getOwnerInstance(await waitFor(`.${members.membersWrap}`));
-    inject('rce-members', instance.__proto__, 'render', function (_, res) {
-      if (!_this.settings.get('members', true) || !res.props.children?.props) {
+    const instance = getOwnerInstance(await waitFor(`.${members.membersGroup}`));
+    inject('rce-members', instance.props.children.type, 'type', (args, res) => {
+      if (!this.settings.get('members', true) || !res?.props?.children?.props || !(/\d+/).test(args[0].id)) {
         return res;
       }
 
-      const guild = _this.guilds.getGuild(this.props.channel.guild_id);
-      const func = res.props.children.props.renderSection;
-      res.props.children.props.renderSection = (a) => {
-        let section = func(a);
-        if (section.props.tutorialId) {
-          section = section.props.children;
-        }
-        if (!(/\d+/).test(section.props.id)) {
-          return section;
-        }
+      const guild = this.guilds.getGuild(this.currentGuild.getGuildId());
+      const role = guild.roles[args[0].id];
+      if (role.color === 0) {
+        return res;
+      }
 
-        const role = guild.roles[section.props.id];
-        if (role.color === 0) {
-          return section;
-        }
+      res.props.children.props.className = 'rolecolor-colored';
+      res.props.children.props.style = { '--color': this._numberToRgba(role.color) };
 
-        const originalType = section.type.type;
-        section.type = (props) => {
-          const res = originalType(props);
-          res.props.children = React.createElement('span', {
-            className: 'rolecolor-colored',
-            style: { '--color': _this._numberToRgba(role.color) }
-          }, res.props.children);
-          return res;
-        };
-        return section;
-      };
       return res;
     });
-    instance.forceUpdate();
   }
 
   async injectMessages () {
