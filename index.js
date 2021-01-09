@@ -329,7 +329,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
   }
 
   async _extractUserPopout () {
-    const functionalUserPopout = await getModuleByDisplayName('UserPopout');
+    const functionalUserPopout = await getModuleByDisplayName('ConnectedUserPopout');
 
     // React Honks moment
     const owo = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher.current;
