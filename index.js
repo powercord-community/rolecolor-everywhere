@@ -159,7 +159,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     inject('rce-messages', MessageContent, 'type', ([ props ], res) => {
       if (this.settings.get('messages', true)) {
         res.props.style = {
-          color: props.message.colorString
+          color: this.getRoleColor(props.message.channel_id, props.message.author.id)
         };
       }
 
@@ -176,6 +176,18 @@ module.exports = class RoleColorEverywhere extends Plugin {
       return res;
     });
     MessageContent.type.displayName = 'MessageContent';
+  }
+
+  getRoleColor (channelId, memberId) {
+    const channel = this.channels.getChannel(channelId);
+    if (!channel) {
+      return null;
+    }
+    const member = this.members.getMember(channel.guild_id, memberId);
+    if (!member) {
+      return null;
+    }
+    return member.colorString;
   }
 
   _transformMessage (colors, items) {
