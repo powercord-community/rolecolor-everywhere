@@ -159,7 +159,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     inject('rce-messages', MessageContent, 'type', ([ props ], res) => {
       if (this.settings.get('messages', true)) {
         res.props.style = {
-          color: self.getRoleColor(props.message.channel_id, props.message.author.id)
+          color: this.getRoleColor(props.message.channel_id, props.message.author.id)
         };
       }
 
