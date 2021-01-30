@@ -159,7 +159,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     inject('rce-messages', MessageContent, 'type', ([ props ], res) => {
       if (this.settings.get('messages', true)) {
         res.props.style = {
-          color: this.getRoleColor(props.message.channel_id, props.message.author.id)
+          color: this._getRoleColor(props.message)
         };
       }
 
@@ -178,18 +178,6 @@ module.exports = class RoleColorEverywhere extends Plugin {
     MessageContent.type.displayName = 'MessageContent';
   }
 
-  getRoleColor (channelId, memberId) {
-    const channel = this.channels.getChannel(channelId);
-    if (!channel) {
-      return null;
-    }
-    const member = this.members.getMember(channel.guild_id, memberId);
-    if (!member) {
-      return null;
-    }
-    return member.colorString;
-  }
-
   _transformMessage (colors, items) {
     for (const item of items) {
       if (typeof item === 'string') {
@@ -200,7 +188,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
         this._transformMessage(colors, item.props.children);
       }
 
-      if (item.props?.children?.type?.displayName === 'Mention' || item.type?.displayName === 'Mention') {
+      if (item.props?.children?.type?.displayName === 'Mention') {
         const color = colors.shift();
         if (color) {
           const mention = item.props.className ? item : item.props.children;
@@ -227,7 +215,8 @@ module.exports = class RoleColorEverywhere extends Plugin {
       if (_this.settings.get('systemMessages', true)) {
         const props = maybeProps || this.props;
 
-        if (props.message.colorString) {
+        const color = _this._getRoleColor(props.message)
+        if (color) {
           const parts = res.props.children[1]?.type?.displayName === 'ChatLayer'
             ? res.props.children[0].props.children
             : res.props.children;
@@ -235,7 +224,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
           parts.forEach(part => {
             if (typeof part !== 'string') {
               part.props.className = 'rolecolor-colored';
-              part.props.style = { '--color': props.message.colorString };
+              part.props.style = { '--color': color };
             }
           });
         }
@@ -338,6 +327,18 @@ module.exports = class RoleColorEverywhere extends Plugin {
       }
       return res;
     });
+  }
+
+  _getRoleColor (message) {
+    const channel = this.channels.getChannel(message.channel_id);
+    if (!channel) {
+      return null;
+    }
+    const member = this.members.getMember(channel.guild_id, message.author.id);
+    if (!member) {
+      return null;
+    }
+    return member.colorString;
   }
 
   async _extractUserPopout () {
