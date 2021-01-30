@@ -12,6 +12,7 @@
   color: var(--color);
   background-color: var(--backgroundColor);
   padding: 0 2px;
+  border-radius: 3px;
 }
 
 .rolecolor-mention:hover {
