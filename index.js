@@ -173,13 +173,15 @@ module.exports = class RoleColorEverywhere extends Plugin {
     inject('rce-user-mentions', UserMention, 'default', ([ props ], res) => {
       if (this.settings.get('mentions', true)) {
         const color = this._getRoleColor(props.channelId, props.userId);
-        const colorInt = parseInt(color.slice(1), 16)
-        res.props.children.props.className += ' rolecolor-mention';
-        res.props.children.props.style = {
-          '--color': color,
-          '--hoveredColor': this._numberToTextColor(colorInt),
-          '--backgroundColor': this._numberToRgba(colorInt, 0.1)
-        };
+        if (color) {
+          const colorInt = parseInt(color.slice(1), 16)
+          res.props.children.props.className += ' rolecolor-mention';
+          res.props.children.props.style = {
+            '--color': color,
+            '--hoveredColor': this._numberToTextColor(colorInt),
+            '--backgroundColor': this._numberToRgba(colorInt, 0.1)
+          };
+        }
       }
 
       return res;
