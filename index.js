@@ -30,6 +30,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     this.injectTyping();
     this.injectMemberList();
     this.injectMessages();
+    this.injectUserMentions();
     this.injectSystemMessages();
     this.injectSlateMention();
     this.injectStatus();
@@ -42,6 +43,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     uninject('rce-typing');
     uninject('rce-members');
     uninject('rce-messages');
+    uninject('rce-user-mentions');
     uninject('rce-systemMessages-join');
     uninject('rce-systemMessages-boost');
     uninject('rce-slateMentions');
@@ -158,52 +160,32 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const MessageContent = await getModule(m => m.type?.displayName === 'MessageContent');
     inject('rce-messages', MessageContent, 'type', ([ props ], res) => {
       if (this.settings.get('messages', true)) {
-        res.props.style = {
-          color: this._getRoleColor(props.message)
-        };
+        res.props.style = { color: this._getRoleColor(props.message.channel_id, props.message.author.id) };
       }
 
-      if (this.settings.get('mentions', true) && Array.isArray(res.props.children[0])) {
-        const channel = this.channels.getChannel(props.message.channel_id);
-        if (channel) {
-          const guildId = this.channels.getChannel(props.message.channel_id).guild_id;
-          const colors = (props.message.content.match(/<@!?(\d+)>/g) || [])
-            .map(m => this.members.getMember(guildId, m.replace(/[<@!>]/g, ''))?.colorString);
-
-          this._transformMessage(colors, res.props.children[0]);
-        }
-      }
       return res;
     });
     MessageContent.type.displayName = 'MessageContent';
   }
 
-  _transformMessage (colors, items) {
-    for (const item of items) {
-      if (typeof item === 'string') {
-        continue;
+  async injectUserMentions () {
+    const UserMention = await getModule(m => m.default?.displayName === 'UserMention');
+    inject('rce-user-mentions', UserMention, 'default', ([ props ], res) => {
+      if (this.settings.get('mentions', true)) {
+        const color = this._getRoleColor(props.channelId, props.userId);
+        const colorInt = parseInt(color.slice(1), 16)
+        res.props.children.props.className += ' rolecolor-mention';
+        res.props.children.props.style = {
+          '--color': color,
+          '--hoveredColor': this._numberToTextColor(colorInt),
+          '--backgroundColor': this._numberToRgba(colorInt, 0.1)
+        };
       }
 
-      if (Array.isArray(item.props.children)) {
-        this._transformMessage(colors, item.props.children);
-      }
+      return res;
+    });
 
-      if (item.props?.children?.type?.displayName === 'Mention') {
-        const color = colors.shift();
-        if (color) {
-          const mention = item.props.className ? item : item.props.children;
-          const colorInt = parseInt(color.slice(1), 16);
-          mention.props.className += ' rolecolor-mention';
-          mention.props.children = React.createElement('span', {
-            style: {
-              '--color': color,
-              '--hoveredColor': this._numberToTextColor(colorInt),
-              '--backgroundColor': this._numberToRgba(colorInt, 0.1)
-            }
-          }, mention.props.children);
-        }
-      }
-    }
+    UserMention.default.displayName = 'UserMention';
   }
 
   async injectSystemMessages () {
@@ -215,7 +197,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
       if (_this.settings.get('systemMessages', true)) {
         const props = maybeProps || this.props;
 
-        const color = _this._getRoleColor(props.message)
+        const color = _this._getRoleColor(props.message.channel_id, props.message.author.id)
         if (color) {
           const parts = res.props.children[1]?.type?.displayName === 'ChatLayer'
             ? res.props.children[0].props.children
@@ -329,12 +311,13 @@ module.exports = class RoleColorEverywhere extends Plugin {
     });
   }
 
-  _getRoleColor (message) {
-    const channel = this.channels.getChannel(message.channel_id);
+  _getRoleColor (channelId, userId) {
+    const channel = this.channels.getChannel(channelId);
     if (!channel) {
       return null;
     }
-    const member = this.members.getMember(channel.guild_id, message.author.id);
+
+    const member = this.members.getMember(channel.guild_id, userId);
     if (!member) {
       return null;
     }

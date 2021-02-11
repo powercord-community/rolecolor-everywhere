@@ -8,20 +8,16 @@
   background: transparent;
 }
 
-.rolecolor-mention span {
+.rolecolor-mention {
   color: var(--color);
   background-color: var(--backgroundColor);
   padding: 0 2px;
-  border-radius: 3px;
 }
 
 .rolecolor-mention:hover {
   text-decoration: none !important;
-}
-
-.rolecolor-mention:hover span {
-  color: var(--hoveredColor);
-  background-color: var(--color);
+  color: var(--hoveredColor) !important;
+  background-color: var(--color) !important;
 }
 
 .headerNormal-T_seeN .rolecolor-colored-userpopout,
