@@ -236,13 +236,11 @@ module.exports = class RoleColorEverywhere extends Plugin {
         if (member && member.colorString) {
           const colorInt = parseInt(member.colorString.slice(1), 16);
           res.props.className += ' rolecolor-mention';
-          res.props.children = React.createElement('span', {
-            style: {
-              '--color': member.colorString,
-              '--hoveredColor': this._numberToTextColor(colorInt),
-              '--backgroundColor': this._numberToRgba(colorInt, 0.1)
-            }
-          }, res.props.children);
+          res.props.style = {
+            '--color': member.colorString,
+            '--hoveredColor': this._numberToTextColor(colorInt),
+            '--backgroundColor': this._numberToRgba(colorInt, 0.1)
+          };
           return res;
         }
         return res;

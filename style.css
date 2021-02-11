@@ -3,18 +3,14 @@
  * Licensed under the Open Software License version 3.0
  */
 
-.rolecolor-mention {
-  padding: 0;
-  background: transparent;
-}
-
-.rolecolor-mention {
-  color: var(--color);
-  background-color: var(--backgroundColor);
+.chatContent-a9vAAp .rolecolor-mention, .chatContent-a9vAAp .mentioned-xhSam7 .rolecolor-mention {
+  color: var(--color) !important;
+  background-color: var(--backgroundColor) !important;
+  border-radius: 3px;
   padding: 0 2px;
 }
 
-.rolecolor-mention:hover {
+.rolecolor-mention:hover, .mentioned-xhSam7 .rolecolor-mention:hover {
   text-decoration: none !important;
   color: var(--hoveredColor) !important;
   background-color: var(--color) !important;
