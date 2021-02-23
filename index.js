@@ -274,7 +274,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const UserPopout = await this._extractUserPopout();
 
     inject('rce-user-popout', UserPopout.prototype, 'renderHeader', function (_, res) {
-      if (!_this.settings.get('userPoputs', true) || !this.props.guildMember?.colorString) {
+      if (!_this.settings.get('userPopouts', true) || !this.props.guildMember?.colorString) {
         return res;
       }
 
