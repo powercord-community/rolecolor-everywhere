@@ -169,6 +169,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
   }
 
   async injectUserMentions () {
+    return
     const UserMention = await getModule(m => m.default?.displayName === 'UserMention');
     inject('rce-user-mentions', UserMention, 'default', ([ props ], res) => {
       if (this.settings.get('mentions', true)) {
@@ -335,12 +336,14 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const ogUseEffect = owo.useEffect;
     const ogUseLayoutEffect = owo.useLayoutEffect;
     const ogUseRef = owo.useRef;
+    const ogUseCallback = owo.useCallback
 
-    owo.useMemo = () => null;
-    owo.useState = () => [ null, () => void 0 ];
+    owo.useMemo = (x) => x();
+    owo.useState = (x) => [ x, () => void 0 ];
     owo.useEffect = () => null;
     owo.useLayoutEffect = () => null;
     owo.useRef = () => ({});
+    owo.useCallback = (c) => c
 
     // Render moment
     const ogGetCurrentUser = userStore.getCurrentUser
@@ -354,6 +357,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     owo.useEffect = ogUseEffect;
     owo.useLayoutEffect = ogUseLayoutEffect;
     owo.useRef = ogUseRef;
+    owo.useCallback = ogUseCallback
 
     // Poggers moment
     return res.type;
