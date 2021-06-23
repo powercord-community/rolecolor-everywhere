@@ -331,7 +331,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
 
   async _extractUserPopout () {
     const userStore = await getModule([ 'getCurrentUser' ]);
-    const functionalUserPopout = await getModuleByDisplayName('ConnectedUserPopout');
+    const functionalUserPopout = await getModule((m) => m.type?.displayName === 'UserPopoutContainer');
 
     // React Honks moment
     const owo = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher.current;
@@ -352,8 +352,12 @@ module.exports = class RoleColorEverywhere extends Plugin {
     // Render moment
     const ogGetCurrentUser = userStore.getCurrentUser
     userStore.getCurrentUser = () => ({ id: '0' })
-    const res = functionalUserPopout({ user: { isNonUserBot: () => void 0 } });
-    userStore.getCurrentUser = ogGetCurrentUser
+    let res
+    try {
+      res = functionalUserPopout.type({ user: { isNonUserBot: () => void 0 } });
+    } finally {
+      userStore.getCurrentUser = ogGetCurrentUser
+    }
 
     // React Hooks moment
     owo.useMemo = ogUseMemo;
