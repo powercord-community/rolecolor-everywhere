@@ -44,6 +44,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     uninject('rce-members');
     uninject('rce-messages');
     uninject('rce-user-mentions');
+    uninject('rce-user-mentions-style');
     uninject('rce-systemMessages-join');
     uninject('rce-systemMessages-boost');
     uninject('rce-slateMentions');
@@ -169,7 +170,9 @@ module.exports = class RoleColorEverywhere extends Plugin {
   }
 
   async injectUserMentions () {
-    const UserMention = await getModule(m => m.default?.displayName === 'UserMention');
+    const UserMention = await getModule(m => m.default?.displayName === 'UserMention')
+    const Mention = await getModule(m => m.default?.displayName === 'Mention')
+
     inject('rce-user-mentions', UserMention, 'default', ([ props ], res) => {
       if (this.settings.get('mentions', true)) {
         const color = this._getRoleColor(props.channelId, props.userId);
@@ -178,21 +181,27 @@ module.exports = class RoleColorEverywhere extends Plugin {
           const ogChildren = res.props.children
           res.props.children = (props) => {
             const res = ogChildren(props)
-            res.props.className += ' rolecolor-mention';
+            res.props.className += ' rolecolor-mention'
             res.props.style = {
               '--color': color,
               '--hoveredColor': this._numberToTextColor(colorInt),
               '--backgroundColor': this._numberToRgba(colorInt, 0.1)
-            };
+            }
             return res
           }
         }
       }
 
       return res;
-    });
+    })
+
+    inject('rce-user-mentions-style', Mention, 'default', ([ props ], res) => {
+      res.props.style = props.style
+      return res;
+    })
 
     UserMention.default.displayName = 'UserMention';
+    Mention.default.displayName = 'Mention';
   }
 
   async injectSystemMessages () {
