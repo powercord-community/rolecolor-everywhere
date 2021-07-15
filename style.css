@@ -16,9 +16,8 @@
   background-color: var(--color) !important;
 }
 
-.headerNormal-T_seeN .rolecolor-colored-userpopout,
-.rolecolor-colored {
-  color: var(--color) !important;
+.headerNormal-T_seeN .rolecolor-colored-userpopout, .rolecolor-colored {
+  color: var(--color, var(--text-normal)) !important;
 }
 
 .headerNormal-T_seeN .rolecolor-colored-userpopout > span:not(.botTag-2WPJ74 ),
