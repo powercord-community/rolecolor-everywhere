@@ -29,3 +29,7 @@
 .headerNormal-T_seeN .rolecolor-colored-userpopout span:not([class]) {
   opacity: 0.6;
 }
+
+.rolecolor-mention, .rolecolor-colored, .rolecolor-colored .activity-2Gy-9S {
+  filter: saturate(var(--saturation-factor, 1)) contrast(var(--contrast, 1)) brightness(var(--brightness, 1));
+}

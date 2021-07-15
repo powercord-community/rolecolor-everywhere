@@ -79,7 +79,8 @@ module.exports = class RoleColorEverywhere extends Plugin {
           const member = _this.members.getMember(guildId, currentId);
           if (member && member.colorString) {
             return React.createElement('span', {
-              style: { color: member.colorString }
+              className: 'rolecolor-colored',
+              style: { '--color': member.colorString }
             }, children);
           }
           return children;
@@ -283,6 +284,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     });
   }
 
+  // todo: fix
   async injectUserPopout () {
     const _this = this;
     const UserPopout = await this._extractUserPopout();
