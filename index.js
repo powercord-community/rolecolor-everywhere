@@ -198,7 +198,9 @@ module.exports = class RoleColorEverywhere extends Plugin {
     })
 
     inject('rce-user-mentions-style', Mention, 'default', ([ props ], res) => {
-      res.props.style = props.style
+      if (props.style) {
+        res.props.style = props.style
+      }
       return res;
     })
 
