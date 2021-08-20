@@ -141,7 +141,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const members = await getModule([ 'members', 'membersWrap' ]);
     const instance = getOwnerInstance(await waitFor(`.${members.membersGroup}`));
     inject('rce-members', instance.props.children.type, 'type', (args, res) => {
-      if (!this.settings.get('members', true) || !res?.props?.children?.props || !(/\d+/).test(args[0].id)) {
+      if (!this.settings.get('members', true) || !res?.props?.children || !(/\d+/).test(args[0].id)) {
         return res;
       }
 
@@ -151,8 +151,8 @@ module.exports = class RoleColorEverywhere extends Plugin {
         return res;
       }
 
-      res.props.children.props.className = 'rolecolor-colored';
-      res.props.children.props.style = { '--color': this._numberToRgba(role.color) };
+      res.props.children[1].props.className = 'rolecolor-colored';
+      res.props.children[1].props.style = { '--color': this._numberToRgba(role.color) };
 
       return res;
     });
