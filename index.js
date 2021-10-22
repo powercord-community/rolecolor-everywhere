@@ -20,9 +20,9 @@ module.exports = class RoleColorEverywhere extends Plugin {
 
     this.loadStylesheet('style.css');
 
-    this.currentUser = await getModule([ 'getCurrentUser' ]);
+    this.currentUser = await getModule([ 'getCurrentUser', 'getUser' ]);
     this.members = await getModule([ 'getMember' ]);
-    this.channels = await getModule([ 'getChannel' ]);
+    this.channels = await getModule([ 'getChannel', 'getDMFromUserId' ]);
     this.guilds = await getModule([ 'getGuild' ]);
     this.currentGuild = await getModule([ 'getLastSelectedGuildId' ]);
     this.injectAccount();
@@ -344,7 +344,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
   }
 
   async _extractUserPopout () {
-    const userStore = await getModule([ 'getCurrentUser' ]);
+    const userStore = await getModule([ 'getCurrentUser', 'getUser' ]);
     const functionalUserPopout = await getModule((m) => m.type?.displayName === 'UserPopoutContainer');
 
     // React Honks moment
@@ -365,7 +365,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
 
     // Render moment
     const ogGetCurrentUser = userStore.getCurrentUser
-    userStore.getCurrentUser = () => ({ id: '0' })
+    // userStore.getCurrentUser = () => ({ id: '0' })
     let res
     try {
       res = functionalUserPopout.type({ user: { isNonUserBot: () => void 0 } });
