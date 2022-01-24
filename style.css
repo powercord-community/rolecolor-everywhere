@@ -3,38 +3,32 @@
  * Licensed under the Open Software License version 3.0
  */
 
-.chatContent-3KubbW .rolecolor-mention,
-.chatContent-3KubbW .mentioned-Tre-dv .rolecolor-mention {
-	color: var(--color) !important;
-	background-color: var(--backgroundColor) !important;
-	border-radius: 3px;
-	padding: 0 2px;
+.chatContent-3KubbW .rolecolor-mention, .chatContent-3KubbW .mentioned-Tre-dv .rolecolor-mention {
+  color: var(--color) !important;
+  background-color: var(--backgroundColor) !important;
+  border-radius: 3px;
+  padding: 0 2px;
 }
 
-.rolecolor-mention:hover,
-.mentioned-Tre-dv .rolecolor-mention:hover {
-	text-decoration: none !important;
-	color: var(--hoveredColor) !important;
-	background-color: var(--color) !important;
+.rolecolor-mention:hover, .mentioned-Tre-dv .rolecolor-mention:hover {
+  text-decoration: none !important;
+  color: var(--hoveredColor) !important;
+  background-color: var(--color) !important;
 }
 
-.headerNormal-3Zn_yu .rolecolor-colored-userpopout,
-.rolecolor-colored {
-	color: var(--color, var(--text-normal)) !important;
+.headerNormal-3Zn_yu .rolecolor-colored-userpopout, .rolecolor-colored {
+  color: var(--color, var(--text-normal)) !important;
 }
 
 .headerNormal-3Zn_yu .rolecolor-colored-userpopout > span:not(.botTag-2mryIa),
 .rolecolor-colored > * {
-	color: inherit;
+  color: inherit;
 }
 
 .headerNormal-3Zn_yu .rolecolor-colored-userpopout span:not([class]) {
-	opacity: 0.6;
+  opacity: 0.6;
 }
 
-.rolecolor-mention,
-.rolecolor-colored,
-.rolecolor-colored .activity-2EQDZv {
-	filter: saturate(var(--saturation-factor, 1)) contrast(var(--contrast, 1))
-		brightness(var(--brightness, 1));
+.rolecolor-mention, .rolecolor-colored, .rolecolor-colored .activity-2EQDZv {
+  filter: saturate(var(--saturation-factor, 1)) contrast(var(--contrast, 1)) brightness(var(--brightness, 1));
 }
