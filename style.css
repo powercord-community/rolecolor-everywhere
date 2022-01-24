@@ -11,7 +11,8 @@
 	padding: 0 2px;
 }
 
-.rolecolor-mention:hover {
+.rolecolor-mention:hover,
+.mentioned-Tre-dv .rolecolor-mention:hover {
 	text-decoration: none !important;
 	color: var(--hoveredColor) !important;
 	background-color: var(--color) !important;
