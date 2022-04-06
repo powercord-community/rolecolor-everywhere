@@ -25,6 +25,8 @@ module.exports = class RoleColorEverywhere extends Plugin {
     this.channels = await getModule([ 'getChannel', 'getDMFromUserId' ]);
     this.guilds = await getModule([ 'getGuild' ]);
     this.currentGuild = await getModule([ 'getLastSelectedGuildId' ]);
+
+    this._usernameComponent = Flux.connectStores([ this.currentGuild ], () => ({ guildId: this.currentGuild.getGuildId() }))(this._usernameComponent.bind(this))
     this.injectAccount();
     this.injectVoice();
     this.injectTyping();
@@ -67,30 +69,8 @@ module.exports = class RoleColorEverywhere extends Plugin {
         return res;
       }
 
-      const originalChildren = res.props.children;
-      res.props.children = (props) => {
-        const res = originalChildren(props);
-        const usernameComponent = ({ guildId, children }) => {
-          if (!guildId) {
-            return children;
-          }
-
-          const currentId = _this.currentUser.getCurrentUser().id;
-          const member = _this.members.getMember(guildId, currentId);
-          if (member && member.colorString) {
-            return React.createElement('span', {
-              className: 'rolecolor-colored',
-              style: { '--color': member.colorString }
-            }, children);
-          }
-          return children;
-        };
-
-        const ConnectedComponent = Flux.connectStores([ _this.currentGuild ], () => ({ guildId: _this.currentGuild.getGuildId() }))(usernameComponent);
-        const originalUsername = res.props.children[0].props.children.props.children;
-        res.props.children[0].props.children.props.children = React.createElement(ConnectedComponent, null, originalUsername);
-        return res;
-      };
+      const originalUsername = res.props.children[0].props.children.props.children;
+      res.props.children[0].props.children.props.children = React.createElement(this._usernameComponent, null, originalUsername);
       return res;
     });
   }
@@ -342,6 +322,22 @@ module.exports = class RoleColorEverywhere extends Plugin {
     }
     return member.colorString;
   }
+
+  _usernameComponent ({ guildId, children }) {
+    if (!guildId) {
+      return children;
+    }
+
+    const currentId = this.currentUser.getCurrentUser().id;
+    const member = this.members.getMember(guildId, currentId);
+    if (member && member.colorString) {
+      return React.createElement('span', {
+        className: 'rolecolor-colored',
+        style: { '--color': member.colorString }
+      }, children);
+    }
+    return children;
+  };
 
   async _extractUserPopout () {
     const userStore = await getModule([ 'getCurrentUser', 'getUser' ]);
