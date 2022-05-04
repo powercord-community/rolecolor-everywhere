@@ -223,14 +223,14 @@ module.exports = class RoleColorEverywhere extends Plugin {
 
   async injectSlateMention () {
     const module = await getModule([ 'UserMention', 'RoleMention' ]);
-    await inject('rce-slateMentions', module, 'UserMention', ([ { id, channel: { guild_id } } ], res) => {
+    await inject('rce-slateMentions', module, 'UserMention', ([ { id, guildId } ], res) => {
       if (!this.settings.get('mentions', true)) {
         return res;
       }
       const ogChildren = res.props.children;
       res.props.children = (props) => {
         const res = ogChildren(props);
-        const member = this.members.getMember(guild_id, id);
+        const member = this.members.getMember(guildId, id);
         if (member && member.colorString) {
           const colorInt = parseInt(member.colorString.slice(1), 16);
           res.props.className += ' rolecolor-mention';
