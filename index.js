@@ -26,7 +26,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     this.guilds = await getModule([ 'getGuild' ]);
     this.currentGuild = await getModule([ 'getLastSelectedGuildId' ]);
 
-    this._usernameComponent = Flux.connectStores([ this.currentGuild ], () => ({ guildId: this.currentGuild.getGuildId() }))(this._usernameComponent.bind(this))
+    this._usernameComponent = Flux.connectStores([ this.currentGuild ], () => ({ guildId: this.currentGuild.getGuildId() }))(this._usernameComponent.bind(this));
     this.injectAccount();
     this.injectVoice();
     this.injectTyping();
@@ -152,37 +152,37 @@ module.exports = class RoleColorEverywhere extends Plugin {
   }
 
   async injectUserMentions () {
-    const UserMention = await getModule(m => m.default?.displayName === 'UserMention')
-    const Mention = await getModule(m => m.default?.displayName === 'Mention')
+    const UserMention = await getModule(m => m.default?.displayName === 'UserMention');
+    const Mention = await getModule(m => m.default?.displayName === 'Mention');
 
     inject('rce-user-mentions', UserMention, 'default', ([ props ], res) => {
       if (this.settings.get('mentions', true)) {
         const color = this._getRoleColor(props.channelId, props.userId);
         if (color) {
-          const colorInt = parseInt(color.slice(1), 16)
-          const ogChildren = res.props.children
+          const colorInt = parseInt(color.slice(1), 16);
+          const ogChildren = res.props.children;
           res.props.children = (props) => {
-            const res = ogChildren(props)
-            res.props.className += ' rolecolor-mention'
+            const res = ogChildren(props);
+            res.props.className += ' rolecolor-mention';
             res.props.style = {
               '--color': color,
               '--hoveredColor': this._numberToTextColor(colorInt),
               '--backgroundColor': this._numberToRgba(colorInt, 0.1)
-            }
-            return res
-          }
+            };
+            return res;
+          };
         }
       }
 
       return res;
-    })
+    });
 
     inject('rce-user-mentions-style', Mention, 'default', ([ props ], res) => {
       if (props.style) {
-        res.props.style = props.style
+        res.props.style = props.style;
       }
       return res;
-    })
+    });
 
     UserMention.default.displayName = 'UserMention';
     Mention.default.displayName = 'Mention';
@@ -197,7 +197,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
       if (_this.settings.get('systemMessages', true)) {
         const props = maybeProps || this.props;
 
-        const color = _this._getRoleColor(props.message.channel_id, props.message.author.id)
+        const color = _this._getRoleColor(props.message.channel_id, props.message.author.id);
         if (color) {
           const parts = res.props.children[1]?.type?.displayName === 'ChatLayer'
             ? res.props.children[0].props.children
@@ -337,7 +337,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
       }, children);
     }
     return children;
-  };
+  }
 
   async _extractUserPopout () {
     const userStore = await getModule([ 'getCurrentUser', 'getUser' ]);
@@ -350,23 +350,23 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const ogUseEffect = owo.useEffect;
     const ogUseLayoutEffect = owo.useLayoutEffect;
     const ogUseRef = owo.useRef;
-    const ogUseCallback = owo.useCallback
+    const ogUseCallback = owo.useCallback;
 
     owo.useMemo = (x) => x();
     owo.useState = (x) => [ x, () => void 0 ];
     owo.useEffect = () => null;
     owo.useLayoutEffect = () => null;
     owo.useRef = () => ({});
-    owo.useCallback = (c) => c
+    owo.useCallback = (c) => c;
 
     // Render moment
-    const ogGetCurrentUser = userStore.getCurrentUser
+    const ogGetCurrentUser = userStore.getCurrentUser;
     // userStore.getCurrentUser = () => ({ id: '0' })
-    let res
+    let res;
     try {
       res = functionalUserPopout.type({ user: { isNonUserBot: () => void 0 } });
     } finally {
-      userStore.getCurrentUser = ogGetCurrentUser
+      userStore.getCurrentUser = ogGetCurrentUser;
     }
 
     // React Hooks moment
@@ -375,7 +375,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     owo.useEffect = ogUseEffect;
     owo.useLayoutEffect = ogUseLayoutEffect;
     owo.useRef = ogUseRef;
-    owo.useCallback = ogUseCallback
+    owo.useCallback = ogUseCallback;
 
     // Poggers moment
     return res.type;
