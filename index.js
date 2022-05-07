@@ -152,40 +152,29 @@ module.exports = class RoleColorEverywhere extends Plugin {
   }
 
   async injectUserMentions () {
-    const UserMention = await getModule(m => m.default?.displayName === 'UserMention');
-    const Mention = await getModule(m => m.default?.displayName === 'Mention');
+    const MessageContent = getModule(
+      (m) => m.type && m.type.displayName === 'MessageContent', false
+    );
 
-    inject('rce-user-mentions', UserMention, 'default', ([ props ], res) => {
-      if (this.settings.get('mentions', true)) {
-        const color = this._getRoleColor(props.channelId, props.userId);
-        if (color) {
-          const colorInt = parseInt(color.slice(1), 16);
-          const ogChildren = res.props.children;
-          res.props.children = (props) => {
-            const res = ogChildren(props);
-            res.props.className += ' rolecolor-mention';
-            res.props.style = {
+    inject('rce-user-mentions', MessageContent, 'type', ([ { message } ], res) => {
+      res.props.children[0] = res.props.children[0].map((elem) => {
+        if (elem.props && elem.props.className === 'mention') {
+          const color = this._getRoleColor(message.channel_id, message.author.id);
+          if (color) {
+            const colorInt = parseInt(color.slice(1), 16);
+            elem.props.className += ' rolecolor-mention';
+            elem = React.createElement('div', { style: {
               '--color': color,
               '--hoveredColor': this._numberToTextColor(colorInt),
               '--backgroundColor': this._numberToRgba(colorInt, 0.1)
-            };
-            return res;
-          };
+            } }, elem);
+          }
         }
-      }
+        return elem;
+      });
 
       return res;
     });
-
-    inject('rce-user-mentions-style', Mention, 'default', ([ props ], res) => {
-      if (props.style) {
-        res.props.style = props.style;
-      }
-      return res;
-    });
-
-    UserMention.default.displayName = 'UserMention';
-    Mention.default.displayName = 'Mention';
   }
 
   async injectSystemMessages () {
