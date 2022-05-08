@@ -159,7 +159,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     inject('rce-user-mentions', MessageContent, 'type', ([ { message } ], res) => {
       res.props.children[0] = res.props.children[0].map((elem) => {
         if (elem.props && elem.props.className === 'mention') {
-          const color = this._getRoleColor(message.channel_id, message.author.id);
+          const color = this._getRoleColor(message.channel_id, elem.props.userId);
           if (color) {
             const colorInt = parseInt(color.slice(1), 16);
             elem.props.className += ' rolecolor-mention';
