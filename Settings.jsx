@@ -43,14 +43,14 @@ module.exports = class Settings extends React.PureComponent {
           value={this.props.getSetting('members', true)}
           onChange={() => this.props.toggleSetting('members', true)}
         >
-          Members list
+          Members List
         </SwitchItem>
         <SwitchItem
           note='Whether user statuses in the member list are colored'
           value={this.props.getSetting('status', true)}
           onChange={() => this.props.toggleSetting('status', true)}
         >
-          {Messages.FRIENDS_COLUMN_STATUS}
+          Members List Status
         </SwitchItem>
         <SwitchItem
           note='Whether messages are colored'
