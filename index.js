@@ -100,7 +100,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const blockedStore = await getModule([ 'isBlocked', 'isFriend' ]);
     const instance = getOwnerInstance(await waitFor(`.${typing.typing.replace(/ /g, '.')}`));
     inject('rce-typing', instance.__proto__, 'render', function (args, res) {
-      if (!res || !this.props.channel.guild_id || !_this.settings.get('typing', true) || res.props.hasOwnProperty('guild') || res.props.children[0]?.props?.children[1]?.props?.children) {
+      if (!res || !this.props.channel.guild_id || !_this.settings.get('typing', true)) {
         return res;
       }
 
