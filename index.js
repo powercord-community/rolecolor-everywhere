@@ -100,16 +100,16 @@ module.exports = class RoleColorEverywhere extends Plugin {
     const blockedStore = await getModule([ 'isBlocked', 'isFriend' ]);
     const instance = getOwnerInstance(await waitFor(`.${typing.typing.replace(/ /g, '.')}`));
     inject('rce-typing', instance.__proto__, 'render', function (args, res) {
-      if (!res || !this.props.channel.guild_id || !_this.settings.get('typing', true) || res.props.hasOwnProperty('guild') || res.props.children[0]?.props?.children[1]?.props?.children) {
+      if (!res || !this.props.channel.guild_id || !_this.settings.get('typing', true)) {
         return res;
       }
 
       const currentId = _this.currentUser.getCurrentUser().id;
       Object.keys(this.props.typingUsers).filter(id => id !== currentId && !blockedStore.isBlocked(id)).forEach((id, i) => {
         const member = _this.members.getMember(this.props.channel.guild_id, id);
-        if (member.colorString && res.props.children[1].props.children[i * 2].props) {
-          res.props.children[1].props.children[i * 2].props.className = 'rolecolor-colored';
-          res.props.children[1].props.children[i * 2].props.style = { '--color': member.colorString };
+        if (member.colorString && res.props.children[0].props.children[1].props.children[i * 2].props) {
+          res.props.children[0].props.children[1].props.children[i * 2].props.className = 'rolecolor-colored';
+          res.props.children[0].props.children[1].props.children[i * 2].props.style = { '--color': member.colorString };
         }
       });
       return res;
