@@ -107,9 +107,9 @@ module.exports = class RoleColorEverywhere extends Plugin {
       const currentId = _this.currentUser.getCurrentUser().id;
       Object.keys(this.props.typingUsers).filter(id => id !== currentId && !blockedStore.isBlocked(id)).forEach((id, i) => {
         const member = _this.members.getMember(this.props.channel.guild_id, id);
-        if (member.colorString && res.props.children[1].props.children[i * 2].props) {
-          res.props.children[1].props.children[i * 2].props.className = 'rolecolor-colored';
-          res.props.children[1].props.children[i * 2].props.style = { '--color': member.colorString };
+        if (member.colorString && res.props.children[0].props.children[1].props.children[i * 2].props) {
+          res.props.children[0].props.children[1].props.children[i * 2].props.className = 'rolecolor-colored';
+          res.props.children[0].props.children[1].props.children[i * 2].props.style = { '--color': member.colorString };
         }
       });
       return res;
