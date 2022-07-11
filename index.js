@@ -165,17 +165,21 @@ module.exports = class RoleColorEverywhere extends Plugin {
           } }, elem);
         }
       } else if (elem.props && elem.props.children) {
-        let { children } = elem.props;
-        const isFn = typeof children === 'function';
-        if (isFn) {
-          children = children();
-        }
-        if (!Array.isArray(children)) {
+        try {
+          let { children } = elem.props;
+          const isFn = typeof children === 'function';
+          if (isFn) {
+            children = children();
+          }
+          if (!Array.isArray(children)) {
+            return elem;
+          }
+          const val = this.processMentions(children);
+          if (children) {
+            elem.props.children = isFn ? () => val : val;
+          }
+        } catch (e) {
           return elem;
-        }
-        const val = this.processMentions(children);
-        if (children) {
-          elem.props.children = isFn ? () => val : val;
         }
       }
       return elem;
