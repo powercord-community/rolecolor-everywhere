@@ -151,6 +151,34 @@ module.exports = class RoleColorEverywhere extends Plugin {
     MessageContent.type.displayName = 'MessageContent';
   }
 
+  processMentions (res) {
+    return res.map((elem) => {
+      if (elem.props && elem.props.className === 'mention' && elem.props.userId) {
+        const color = this._getRoleColor(elem.props.channelId, elem.props.userId);
+        if (color) {
+          const colorInt = parseInt(color.slice(1), 16);
+          elem.props.className += ' rolecolor-mention';
+          elem = React.createElement('span', { style: {
+            '--color': color,
+            '--hoveredColor': this._numberToTextColor(colorInt),
+            '--backgroundColor': this._numberToRgba(colorInt, 0.1)
+          } }, elem);
+        }
+      } else if (elem.props && elem.props.children) {
+        let { children } = elem.props;
+        const isFn = typeof children === 'function';
+        if (isFn) {
+          children = children();
+        }
+        const val = this.processMentions(children);
+        if (children) {
+          elem.props.children = isFn ? () => val : val;
+        }
+      }
+      return elem;
+    });
+  }
+
   async injectUserMentions () {
     const parse = await getModule([
       'parse', 'parseTopic'
@@ -158,21 +186,7 @@ module.exports = class RoleColorEverywhere extends Plugin {
 
     inject('rce-user-mentions', parse, 'parse', (_, res) => {
       if (this.settings.get('mentions', true)) {
-        res = res.map((elem) => {
-          if (elem.props && elem.props.className === 'mention' && elem.props.userId) {
-            const color = this._getRoleColor(elem.props.channelId, elem.props.userId);
-            if (color) {
-              const colorInt = parseInt(color.slice(1), 16);
-              elem.props.className += ' rolecolor-mention';
-              elem = React.createElement('span', { style: {
-                '--color': color,
-                '--hoveredColor': this._numberToTextColor(colorInt),
-                '--backgroundColor': this._numberToRgba(colorInt, 0.1)
-              } }, elem);
-            }
-          }
-          return elem;
-        });
+        res = this.processMentions(res);
       }
       return res;
     });
