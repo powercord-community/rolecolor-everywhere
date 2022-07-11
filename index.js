@@ -170,6 +170,9 @@ module.exports = class RoleColorEverywhere extends Plugin {
         if (isFn) {
           children = children();
         }
+        if (!Array.isArray(children)) {
+          return elem;
+        }
         const val = this.processMentions(children);
         if (children) {
           elem.props.children = isFn ? () => val : val;
