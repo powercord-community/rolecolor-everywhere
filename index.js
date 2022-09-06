@@ -26,6 +26,8 @@ module.exports = class RoleColorEverywhere extends Plugin {
     this.guilds = await getModule([ 'getGuild' ]);
     this.currentGuild = await getModule([ 'getLastSelectedGuildId' ]);
 
+    this.parser = await getModule([ 'parse', 'defaultRules' ], false);
+
     this._usernameComponent = Flux.connectStores([ this.currentGuild ], () => ({ guildId: this.currentGuild.getGuildId() }))(this._usernameComponent.bind(this));
     this.injectAccount();
     this.injectVoice();
@@ -45,13 +47,16 @@ module.exports = class RoleColorEverywhere extends Plugin {
     uninject('rce-typing');
     uninject('rce-members');
     uninject('rce-messages');
-    uninject('rce-user-mentions');
-    uninject('rce-user-mentions-style');
     uninject('rce-systemMessages-join');
     uninject('rce-systemMessages-boost');
     uninject('rce-slateMentions');
     uninject('rce-status');
     uninject('rce-user-popout');
+
+    if (this.originalMentionReactFn) {
+      this.parser.defaultRules.mention.react = this.originalMentionReactFn;
+    }
+
     powercord.api.settings.unregisterSettings('rceverywhere');
 
     const classes = getModule([ 'container', 'usernameContainer' ], false);
@@ -151,52 +156,29 @@ module.exports = class RoleColorEverywhere extends Plugin {
     MessageContent.type.displayName = 'MessageContent';
   }
 
-  processMentions (res) {
-    return res.map((elem) => {
-      if (elem.props && elem.props.className === 'mention' && elem.props.userId) {
-        const color = this._getRoleColor(elem.props.channelId, elem.props.userId);
-        if (color) {
-          const colorInt = parseInt(color.slice(1), 16);
-          elem.props.className += ' rolecolor-mention';
-          elem = React.createElement('span', { style: {
-            '--color': color,
-            '--hoveredColor': this._numberToTextColor(colorInt),
-            '--backgroundColor': this._numberToRgba(colorInt, 0.1)
-          } }, elem);
-        }
-      } else if (elem.props && elem.props.children) {
-        try {
-          let { children } = elem.props;
-          const isFn = typeof children === 'function';
-          if (isFn) {
-            children = children();
-          }
-          if (!Array.isArray(children)) {
-            return elem;
-          }
-          const val = this.processMentions(children);
-          if (children) {
-            elem.props.children = isFn ? () => val : val;
-          }
-        } catch (e) {
-          return elem;
-        }
-      }
-      return elem;
-    });
-  }
-
   async injectUserMentions () {
-    const parse = await getModule([
-      'parse', 'parseTopic'
-    ]);
+    const originalFn = this.parser.defaultRules.mention.react;
+    this.originalMentionReactFn = originalFn;
 
-    inject('rce-user-mentions', parse, 'parse', (_, res) => {
-      if (this.settings.get('mentions', true)) {
-        res = this.processMentions(res);
+    this.parser.defaultRules.mention.react = (node, output, state) => {
+      let res = originalFn(node, output, state);
+      if (!this.settings.get('mentions', true)) {
+        return res;
       }
+
+      const color = this._getRoleColor(node.channelId, node.userId);
+      if (color) {
+        const colorInt = parseInt(color.slice(1), 16);
+        res.props.className += ' rolecolor-mention';
+        res = React.createElement('span', { style: {
+          '--color': color,
+          '--hoveredColor': this._numberToTextColor(colorInt),
+          '--backgroundColor': this._numberToRgba(colorInt, 0.1)
+        } }, res);
+      }
+
       return res;
-    });
+    };
   }
 
   async injectSystemMessages () {
